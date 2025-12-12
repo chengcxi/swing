@@ -1,0 +1,52 @@
+
+@if (isAuthenticated()) {
+  <main class="flex justify-center items-center min-h-screen bg-slate-200 font-sans">
+    <div class="w-full max-w-sm h-[800px] bg-gray-50 shadow-2xl rounded-[40px] border-8 border-black overflow-hidden relative flex flex-col">
+      <div class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-black rounded-b-xl z-20"></div>
+      <app-header 
+        [activeScreen]="activeScreen()"
+        (menuToggled)="toggleMenu()"
+        (messagesClicked)="onNavigate('messages')">
+      </app-header>
+      <div class="flex-grow overflow-y-auto relative">
+        @switch (activeScreen()) {
+          @case ('feed') {
+            <app-post-feed (profileClicked)="onNavigate('profile')"></app-post-feed>
+          }
+          @case ('search') {
+            <app-search></app-search>
+          }
+          @case ('notifications') {
+            <app-activity-feed></app-activity-feed>
+          }
+          @case ('profile') {
+            <app-profile></app-profile>
+          }
+          @case ('messages') {
+            <app-messages></app-messages>
+          }
+          @default {
+             <div class="p-8 text-center text-gray-500">Coming soon!</div>
+          }
+        }
+      </div>
+      <app-bottom-nav 
+        [activeScreen]="activeScreen()" 
+        (navigate)="onNavigate($event)"
+        (createPost)="openCreatePost()">
+      </app-bottom-nav>
+
+      <app-side-menu [isOpen]="isMenuOpen()" (close)="toggleMenu()" (menuAction)="onMenuAction($event)"></app-side-menu>
+      
+      @if(isFriendFinderOpen()) {
+        <app-friend-finder (close)="closeFriendFinder()"></app-friend-finder>
+      }
+
+      @if(isCreatePostOpen()) {
+        <app-create-post (close)="closeCreatePost()"></app-create-post>
+      }
+    </div>
+  </main>
+} @else {
+  <app-login></app-login>
+}
