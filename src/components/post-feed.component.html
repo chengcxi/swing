@@ -1,4 +1,3 @@
-
 <div class="p-2 space-y-3">
   @for (post of posts(); track post.id) {
     <app-post [post]="post" (profileClicked)="profileClicked.emit()"></app-post>

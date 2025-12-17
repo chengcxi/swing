@@ -1,4 +1,3 @@
-
 import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivityService } from '../services/activity.service';

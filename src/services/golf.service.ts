@@ -1,4 +1,3 @@
-
 import { Injectable, signal, computed } from '@angular/core';
 import { UserStats, GolfRound, CourseRanking, GolfCourse } from '../models/golf.model';
 

@@ -1,4 +1,3 @@
-
 import { Component, ChangeDetectionStrategy, output, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { UserService } from '../services/user.service';

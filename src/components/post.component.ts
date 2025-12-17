@@ -1,4 +1,3 @@
-
 import { Component, ChangeDetectionStrategy, input, output, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Post } from '../models/post.model';

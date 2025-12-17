@@ -1,4 +1,3 @@
-
 import { Injectable, signal } from '@angular/core';
 import { Conversation } from '../models/message.model';
 

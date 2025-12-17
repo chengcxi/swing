@@ -1,4 +1,3 @@
-
 export interface Conversation {
   id: string;
   participantName: string;

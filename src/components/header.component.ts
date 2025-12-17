@@ -1,4 +1,3 @@
-
 import { Component, ChangeDetectionStrategy, output, input } from '@angular/core';
 
 @Component({

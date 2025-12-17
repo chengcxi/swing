@@ -1,4 +1,3 @@
-
 import { Component, ChangeDetectionStrategy, inject, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PostService } from '../services/post.service';

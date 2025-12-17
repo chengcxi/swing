@@ -1,4 +1,3 @@
-
 import { Injectable, OnDestroy, signal } from '@angular/core';
 import { GolfActivity } from '../models/golf.model';
 
