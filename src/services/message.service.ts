@@ -7,7 +7,7 @@ export class MessageService {
     {
       id: '1',
       participantName: 'Weekend Golf Warriors',
-      participantAvatar: 'https://i.pravatar.cc/60?u=group1',
+      participantAvatar: 'https://cdn-icons-png.freepik.com/512/166/166258.png',
       lastMessage: 'Jack: Sounds good, see you Saturday!',
       timestamp: '15m ago',
       unreadCount: 2,
@@ -15,8 +15,8 @@ export class MessageService {
     },
     {
       id: '2',
-      participantName: 'Jaxon Smith',
-      participantAvatar: 'https://i.pravatar.cc/60?u=jaxonsmith',
+      participantName: 'Jane Doe',
+      participantAvatar: 'https://media.defense.gov/2020/Feb/19/2002251686/1088/820/0/200219-A-QY194-002.JPG',
       lastMessage: 'Yeah, the new driver is amazing.',
       timestamp: '1h ago',
       unreadCount: 0,
@@ -24,8 +24,8 @@ export class MessageService {
     },
     {
       id: '3',
-      participantName: 'Jack Burke',
-      participantAvatar: 'https://i.pravatar.cc/60?u=jackburke',
+      participantName: 'Jason Doe',
+      participantAvatar: 'https://media.defense.gov/2020/Feb/19/2002251686/1088/820/0/200219-A-QY194-002.JPG',
       lastMessage: 'Are we still on for this weekend?',
       timestamp: 'yesterday',
       unreadCount: 0,
@@ -34,7 +34,7 @@ export class MessageService {
     {
       id: '4',
       participantName: 'Moorpark Country Club Crew',
-      participantAvatar: 'https://i.pravatar.cc/60?u=group2',
+      participantAvatar: 'https://cdn-icons-png.freepik.com/512/166/166258.png',
       lastMessage: 'John: I just booked a tee time for 8am.',
       timestamp: '2d ago',
       unreadCount: 0,
@@ -42,8 +42,8 @@ export class MessageService {
     },
     {
         id: '5',
-        participantName: 'Jane Doe',
-        participantAvatar: 'https://i.pravatar.cc/60?u=janedoe',
+        participantName: 'Jayden Doe',
+        participantAvatar: 'https://media.defense.gov/2020/Feb/19/2002251686/1088/820/0/200219-A-QY194-002.JPG',
         lastMessage: 'Thanks for the swing tips!',
         timestamp: '4d ago',
         unreadCount: 1,

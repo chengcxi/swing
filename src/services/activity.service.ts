@@ -8,10 +8,10 @@ export class ActivityService implements OnDestroy {
   private intervalId: any;
 
   private mockUsers = [
-    { name: 'Alice', avatar: 'https://i.pravatar.cc/40?u=alice' },
-    { name: 'Bob', avatar: 'https://i.pravatar.cc/40?u=bob' },
-    { name: 'Charlie', avatar: 'https://i.pravatar.cc/40?u=charlie' },
-    { name: 'Diana', avatar: 'https://i.pravatar.cc/40?u=diana' },
+    { name: 'Alice', avatar: 'https://media.defense.gov/2020/Feb/19/2002251686/1088/820/0/200219-A-QY194-002.JPG' },
+    { name: 'Bob', avatar: 'https://media.defense.gov/2020/Feb/19/2002251686/1088/820/0/200219-A-QY194-002.JPG' },
+    { name: 'Charlie', avatar: 'https://media.defense.gov/2020/Feb/19/2002251686/1088/820/0/200219-A-QY194-002.JPG' },
+    { name: 'Diana', avatar: 'https://media.defense.gov/2020/Feb/19/2002251686/1088/820/0/200219-A-QY194-002.JPG' },
   ];
 
   private mockActions: Array<Omit<GolfActivity, 'id'|'user'|'userAvatar'|'timestamp'>> = [
