@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, input } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { GolfCourse } from '../models/golf.model';
 
@@ -10,4 +10,9 @@ import { GolfCourse } from '../models/golf.model';
 })
 export class CourseCardComponent {
   course = input.required<GolfCourse>();
+
+  getStarArray = computed(() => {
+    const rating = Math.round(this.course().rating);
+    return Array(5).fill(0).map((_, i) => i < rating ? 1 : 0);
+  });
 }

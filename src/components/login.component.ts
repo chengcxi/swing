@@ -10,7 +10,7 @@ import { AuthService } from '../services/auth.service';
   imports: [CommonModule, ReactiveFormsModule],
 })
 export class LoginComponent {
-  private fb = inject(FormBuilder);
+  private fb: FormBuilder = inject(FormBuilder);
   private authService = inject(AuthService);
 
   mode = signal<'signIn' | 'signUp'>('signIn');

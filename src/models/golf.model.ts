@@ -30,6 +30,7 @@ export interface GolfActivity {
 }
 
 export interface GolfCourse {
+  id: string;
   name: string;
   location: string;
   holes: 9 | 18 | 27 | 36;
@@ -38,4 +39,16 @@ export interface GolfCourse {
     drivingRange: boolean;
     puttingGreen: boolean;
   };
+  imageUrl: string;
+  rating: number;
+}
+
+export interface CourseReview {
+  id: string;
+  courseId: string;
+  author: string;
+  authorAvatar: string;
+  rating: number;
+  comment: string;
+  timestamp: string;
 }

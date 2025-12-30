@@ -1,5 +1,5 @@
-import { Injectable, signal, computed } from '@angular/core';
-import { UserStats, GolfRound, CourseRanking, GolfCourse } from '../models/golf.model';
+import { Injectable, signal, computed, Signal } from '@angular/core';
+import { UserStats, GolfRound, CourseRanking, GolfCourse, CourseReview } from '../models/golf.model';
 
 @Injectable({ providedIn: 'root' })
 export class GolfService {
@@ -42,15 +42,23 @@ export class GolfService {
   ]);
   
   private allCourses = signal<GolfCourse[]>([
-    { name: 'Los Robles Greens', location: 'Thousand Oaks, CA', holes: 18, difficulty: 7.1, facilities: { drivingRange: true, puttingGreen: true } },
-    { name: 'Westlake Golf Course', location: 'Westlake Village, CA', holes: 18, difficulty: 6.2, facilities: { drivingRange: true, puttingGreen: true } },
-    { name: 'Rustic Canyon Golf Course', location: 'Moorpark, CA', holes: 18, difficulty: 8.5, facilities: { drivingRange: true, puttingGreen: true } },
-    { name: 'Moorpark Country Club', location: 'Moorpark, CA', holes: 27, difficulty: 9.1, facilities: { drivingRange: true, puttingGreen: true } },
-    { name: 'Sandpiper Golf Club', location: 'Goleta, CA', holes: 18, difficulty: 9.4, facilities: { drivingRange: true, puttingGreen: true } },
-    { name: 'Pebble Beach', location: 'Pebble Beach, CA', holes: 18, difficulty: 9.8, facilities: { drivingRange: true, puttingGreen: true } },
-    { name: 'The Links at Spanish Bay', location: 'Pebble Beach, CA', holes: 18, difficulty: 9.2, facilities: { drivingRange: true, puttingGreen: false } },
-    { name: 'Simi Hills Golf Course', location: 'Simi Valley, CA', holes: 18, difficulty: 6.8, facilities: { drivingRange: true, puttingGreen: true } },
-    { name: 'Olivas Links', location: 'Ventura, CA', holes: 18, difficulty: 7.5, facilities: { drivingRange: true, puttingGreen: true } },
+    { id: '1', name: 'Los Robles Greens', location: 'Thousand Oaks, CA', holes: 18, difficulty: 7.1, facilities: { drivingRange: true, puttingGreen: true }, imageUrl: 'https://picsum.photos/seed/losrobles/400/200', rating: 4.2 },
+    { id: '2', name: 'Westlake Golf Course', location: 'Westlake Village, CA', holes: 18, difficulty: 6.2, facilities: { drivingRange: true, puttingGreen: true }, imageUrl: 'https://picsum.photos/seed/westlake/400/200', rating: 3.8 },
+    { id: '3', name: 'Rustic Canyon Golf Course', location: 'Moorpark, CA', holes: 18, difficulty: 8.5, facilities: { drivingRange: true, puttingGreen: true }, imageUrl: 'https://picsum.photos/seed/rustic/400/200', rating: 4.8 },
+    { id: '4', name: 'Moorpark Country Club', location: 'Moorpark, CA', holes: 27, difficulty: 9.1, facilities: { drivingRange: true, puttingGreen: true }, imageUrl: 'https://picsum.photos/seed/moorpark/400/200', rating: 4.5 },
+    { id: '5', name: 'Sandpiper Golf Club', location: 'Goleta, CA', holes: 18, difficulty: 9.4, facilities: { drivingRange: true, puttingGreen: true }, imageUrl: 'https://picsum.photos/seed/sandpiper/400/200', rating: 4.9 },
+    { id: '6', name: 'Pebble Beach', location: 'Pebble Beach, CA', holes: 18, difficulty: 9.8, facilities: { drivingRange: true, puttingGreen: true }, imageUrl: 'https://picsum.photos/seed/pebble/400/200', rating: 5.0 },
+    { id: '7', name: 'The Links at Spanish Bay', location: 'Pebble Beach, CA', holes: 18, difficulty: 9.2, facilities: { drivingRange: true, puttingGreen: false }, imageUrl: 'https://picsum.photos/seed/spanishbay/400/200', rating: 4.7 },
+    { id: '8', name: 'Simi Hills Golf Course', location: 'Simi Valley, CA', holes: 18, difficulty: 6.8, facilities: { drivingRange: true, puttingGreen: true }, imageUrl: 'https://picsum.photos/seed/simi/400/200', rating: 4.0 },
+    { id: '9', name: 'Olivas Links', location: 'Ventura, CA', holes: 18, difficulty: 7.5, facilities: { drivingRange: true, puttingGreen: true }, imageUrl: 'https://picsum.photos/seed/olivas/400/200', rating: 4.3 },
+  ]);
+
+  private allReviews = signal<CourseReview[]>([
+    { id: 'r1', courseId: '3', author: 'Jaxon Smith', authorAvatar: 'https://i.pravatar.cc/40?u=jaxonsmith', rating: 5, comment: 'Absolutely stunning course. A true test of golf. Can\'t wait to play it again!', timestamp: '2 days ago' },
+    { id: 'r2', courseId: '3', author: 'Jane Doe', authorAvatar: 'https://i.pravatar.cc/40?u=janedoe', rating: 4, comment: 'Challenging but fair. The views are incredible. Some of the greens were a bit fast.', timestamp: '1 week ago' },
+    { id: 'r3', courseId: '5', author: 'Jack Burke', authorAvatar: 'https://i.pravatar.cc/40?u=jackburke', rating: 5, comment: 'Played here for a tournament. The ocean views on every hole are breathtaking. A must-play course.', timestamp: '3 days ago' },
+    { id: 'r4', courseId: '6', author: 'Jake Shockley', authorAvatar: 'https://i.pravatar.cc/150?u=jake', rating: 5, comment: 'Bucket list course for a reason. Every shot is memorable. The 7th hole is just as amazing in person.', timestamp: '1 month ago' },
+    { id: 'r5', courseId: '6', author: 'Alice', authorAvatar: 'https://i.pravatar.cc/40?u=alice', rating: 5, comment: 'An unforgettable experience. Pricey, but worth every penny for the views and history.', timestamp: '1 month ago' },
   ]);
 
   recentRounds = computed(() => this.allRounds().slice(0, 4));
@@ -77,5 +85,13 @@ export class GolfService {
 
   getCourses() {
     return this.allCourses.asReadonly();
+  }
+
+  getCourseById(id: string) {
+    return computed(() => this.allCourses().find(c => c.id === id));
+  }
+
+  getReviewsForCourse(courseId: Signal<string>) {
+    return computed(() => this.allReviews().filter(r => r.courseId === courseId()));
   }
 }

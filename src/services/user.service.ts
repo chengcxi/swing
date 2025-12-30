@@ -21,7 +21,6 @@ export class UserService {
     return computed(() => this.allUsers().slice(0, 2));
   }
 
-  // FIX: Accept a signal for the search term to make this method reactive.
   searchUsers(term: Signal<string>) {
     return computed(() => {
       const searchTerm = term();

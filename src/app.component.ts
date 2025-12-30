@@ -12,6 +12,8 @@ import { CreatePostComponent } from './components/create-post.component';
 import { MessagesComponent } from './components/messages.component';
 import { LoginComponent } from './components/login.component';
 import { AuthService } from './services/auth.service';
+import { GolfCourse } from './models/golf.model';
+import { CourseDetailsComponent } from './components/course-details.component';
 
 type Screen = 'feed' | 'profile' | 'search' | 'notifications' | 'messages';
 
@@ -19,7 +21,7 @@ type Screen = 'feed' | 'profile' | 'search' | 'notifications' | 'messages';
   selector: 'app-root',
   templateUrl: './app.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, HeaderComponent, ProfileComponent, BottomNavComponent, ActivityFeedComponent, SearchComponent, SideMenuComponent, FriendFinderComponent, PostFeedComponent, CreatePostComponent, MessagesComponent, LoginComponent],
+  imports: [CommonModule, HeaderComponent, ProfileComponent, BottomNavComponent, ActivityFeedComponent, SearchComponent, SideMenuComponent, FriendFinderComponent, PostFeedComponent, CreatePostComponent, MessagesComponent, LoginComponent, CourseDetailsComponent],
 })
 export class AppComponent {
   private authService = inject(AuthService);
@@ -29,9 +31,11 @@ export class AppComponent {
   isMenuOpen = signal(false);
   isFriendFinderOpen = signal(false);
   isCreatePostOpen = signal(false);
+  selectedCourse = signal<GolfCourse | null>(null);
 
   onNavigate(screen: Screen) {
     this.activeScreen.set(screen);
+    this.selectedCourse.set(null); // Clear selected course on navigation
   }
 
   toggleMenu() {
@@ -49,6 +53,7 @@ export class AppComponent {
     if (action === 'findFriends') {
       this.isFriendFinderOpen.set(true);
     } else if (action === 'profile') {
+      this.selectedCourse.set(null);
       this.activeScreen.set('profile');
     }
   }
@@ -63,5 +68,13 @@ export class AppComponent {
 
   closeCreatePost() {
     this.isCreatePostOpen.set(false);
+  }
+
+  onCourseSelected(course: GolfCourse) {
+    this.selectedCourse.set(course);
+  }
+
+  closeCourseDetails() {
+    this.selectedCourse.set(null);
   }
 }

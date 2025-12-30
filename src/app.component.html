@@ -8,24 +8,28 @@
         (messagesClicked)="onNavigate('messages')">
       </app-header>
       <div class="flex-grow overflow-y-auto relative">
-        @switch (activeScreen()) {
-          @case ('feed') {
-            <app-post-feed (profileClicked)="onNavigate('profile')"></app-post-feed>
-          }
-          @case ('search') {
-            <app-search></app-search>
-          }
-          @case ('notifications') {
-            <app-activity-feed></app-activity-feed>
-          }
-          @case ('profile') {
-            <app-profile></app-profile>
-          }
-          @case ('messages') {
-            <app-messages></app-messages>
-          }
-          @default {
-             <div class="p-8 text-center text-gray-500">Coming soon!</div>
+        @if (selectedCourse(); as course) {
+          <app-course-details [course]="course" (close)="closeCourseDetails()"></app-course-details>
+        } @else {
+          @switch (activeScreen()) {
+            @case ('feed') {
+              <app-post-feed (profileClicked)="onNavigate('profile')"></app-post-feed>
+            }
+            @case ('search') {
+              <app-search (courseSelected)="onCourseSelected($event)"></app-search>
+            }
+            @case ('notifications') {
+              <app-activity-feed></app-activity-feed>
+            }
+            @case ('profile') {
+              <app-profile></app-profile>
+            }
+            @case ('messages') {
+              <app-messages></app-messages>
+            }
+            @default {
+               <div class="p-8 text-center text-gray-500">Coming soon!</div>
+            }
           }
         }
       </div>
