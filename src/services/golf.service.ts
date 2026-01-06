@@ -54,11 +54,11 @@ export class GolfService {
   ]);
 
   private allReviews = signal<CourseReview[]>([
-    { id: 'r1', courseId: '3', author: 'Jaxon Smith', authorAvatar: 'https://i.pravatar.cc/40?u=jaxonsmith', rating: 5, comment: 'Absolutely stunning course. A true test of golf. Can\'t wait to play it again!', timestamp: '2 days ago' },
-    { id: 'r2', courseId: '3', author: 'Jane Doe', authorAvatar: 'https://i.pravatar.cc/40?u=janedoe', rating: 4, comment: 'Challenging but fair. The views are incredible. Some of the greens were a bit fast.', timestamp: '1 week ago' },
-    { id: 'r3', courseId: '5', author: 'Jack Burke', authorAvatar: 'https://i.pravatar.cc/40?u=jackburke', rating: 5, comment: 'Played here for a tournament. The ocean views on every hole are breathtaking. A must-play course.', timestamp: '3 days ago' },
-    { id: 'r4', courseId: '6', author: 'Jake Shockley', authorAvatar: 'https://i.pravatar.cc/150?u=jake', rating: 5, comment: 'Bucket list course for a reason. Every shot is memorable. The 7th hole is just as amazing in person.', timestamp: '1 month ago' },
-    { id: 'r5', courseId: '6', author: 'Alice', authorAvatar: 'https://i.pravatar.cc/40?u=alice', rating: 5, comment: 'An unforgettable experience. Pricey, but worth every penny for the views and history.', timestamp: '1 month ago' },
+    { id: 'r1', courseId: '3', author: 'John Doe', authorAvatar: 'hhttps://media.defense.gov/2020/Feb/19/2002251686/1088/820/0/200219-A-QY194-002.JPG', rating: 5, comment: 'Absolutely stunning course. A true test of golf. Can\'t wait to play it again!', timestamp: '2 days ago' },
+    { id: 'r2', courseId: '3', author: 'Jane Doe', authorAvatar: 'https://media.defense.gov/2020/Feb/19/2002251686/1088/820/0/200219-A-QY194-002.JPG', rating: 4, comment: 'Challenging but fair. The views are incredible. Some of the greens were a bit fast.', timestamp: '1 week ago' },
+    { id: 'r3', courseId: '5', author: 'Jack Doe', authorAvatar: 'https://media.defense.gov/2020/Feb/19/2002251686/1088/820/0/200219-A-QY194-002.JPG', rating: 5, comment: 'Played here for a tournament. The ocean views on every hole are breathtaking. A must-play course.', timestamp: '3 days ago' },
+    { id: 'r4', courseId: '6', author: 'Jason Doe', authorAvatar: 'https://media.defense.gov/2020/Feb/19/2002251686/1088/820/0/200219-A-QY194-002.JPG', rating: 5, comment: 'Bucket list course for a reason. Every shot is memorable. The 7th hole is just as amazing in person.', timestamp: '1 month ago' },
+    { id: 'r5', courseId: '6', author: 'Jayden Doe', authorAvatar: 'https://media.defense.gov/2020/Feb/19/2002251686/1088/820/0/200219-A-QY194-002.JPG', rating: 5, comment: 'An unforgettable experience. Pricey, but worth every penny for the views and history.', timestamp: '1 month ago' },
   ]);
 
   recentRounds = computed(() => this.allRounds().slice(0, 4));
