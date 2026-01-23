@@ -1,18 +1,17 @@
 import Foundation
 
-struct Post: Identifiable, Codable {
-    let id: Int
-    let author: String
-    let authorUsername: String
-    let authorAvatar: String
-    let timestamp: String
-    let content: String
-    let image: String?
+struct Post: Identifiable {
+    let id: UUID
+    var user: User
+    var round: Round?
+    var caption: String
+    var timestamp: Date
     var likes: Int
-    var likesList: [String] = [] // User IDs
     var comments: Int
-    var commentsList: [Comment] = []
-    let taggedUsers: [String]?
-    let taggedCourses: [String]?
-    let roundId: UUID? // Linked GolfRound
+    var isLiked: Bool
+    
+    static let mocks: [Post] = [
+        Post(id: UUID(), user: User.mock, round: Round.mocks[0], caption: "Tough day at Riviera but always a blast! ⛳️", timestamp: Date(), likes: 24, comments: 5, isLiked: false),
+        Post(id: UUID(), user: User.mock, round: Round.mocks[1], caption: "Beautiful views at Sandpiper.", timestamp: Date().addingTimeInterval(-3600), likes: 112, comments: 12, isLiked: true)
+    ]
 }

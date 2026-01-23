@@ -1,28 +1,36 @@
 import Foundation
 
-struct User: Identifiable, Codable {
-    let id: String
-    let name: String
-    let username: String
-    let avatar: String
-    let isVerified: Bool
-    let isPro: Bool
-    let description: String?
-    let favoriteCourse: String?
-    let university: String?
-    let eduEmail: String?
-    let handicap: Double?
+struct User: Identifiable {
+    let id: UUID
+    var username: String
+    var fullName: String
+    var isVerified: Bool
+    var profileImageName: String
+    var university: String?
+    var handicap: Double
+    var averageScore: Double
+    var bestRound: Int
+    var roundsPlayed: Int
+    var badges: [Badge]
     
-    // New Features
-    var badges: [Badge] = []
-    var playingStreak: Int = 0
-    var universityRank: Int? = nil // Only if top 10
-    var schoolId: String? = nil
+    static let mock = User(
+        id: UUID(),
+        username: "@jake",
+        fullName: "Jake Shockley",
+        isVerified: true,
+        profileImageName: "profile_placeholder",
+        university: "UCLA",
+        handicap: 2.1,
+        averageScore: 74.5,
+        bestRound: 68,
+        roundsPlayed: 44,
+        badges: [.verified, .top10, .star]
+    )
 }
 
-struct UserStats: Codable {
-    let bestRound: Int
-    let averageScore: Double
-    let roundsPlayed: Int
-    let handicap: Double
+enum Badge: String, Codable {
+    case verified
+    case top10
+    case star
+    case streak
 }

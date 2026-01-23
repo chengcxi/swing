@@ -2,174 +2,173 @@ import SwiftUI
 
 struct ProfileView: View {
     @EnvironmentObject var appViewModel: AppViewModel
-    @State private var showVerificationAlert = false
-    @State private var emailInput = ""
+    @State private var selectedTab: ProfileTab = .rounds
     
-    var user: User? { appViewModel.currentUser }
-    // Mock stats calculation from user
-    var stats: UserStats? { 
-        // In real app, stats would be in User or separate specific model
-        return UserStats(bestRound: 72, averageScore: 78.5, roundsPlayed: 45, handicap: user?.handicap ?? 0.0)
+    enum ProfileTab: String, CaseIterable {
+        case rounds = "Rounds"
+        case rankings = "Rankings"
+        case analytics = "Analytics"
     }
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: 20) {
-                // Header
-                VStack {
-                    AsyncImage(url: URL(string: user?.avatar ?? "")) { image in
-                         image.resizable()
-                             .aspectRatio(contentMode: .fill)
-                     } placeholder: {
-                         Circle().fill(Color.gray)
-                     }
-                     .frame(width: 100, height: 100)
-                     .clipShape(Circle())
-                     .padding(.top)
-                    
-                    Text(user?.name ?? "User")
-                        .font(.title2)
-                        .bold()
-                    
-                    Text(user?.username ?? "@username")
-                        .foregroundColor(.gray)
-                    
-                    if let description = user?.description {
-                        Text(description)
-                            .font(.body)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal)
-                    }
-                    
-                    if let university = user?.university {
-                         Text(university)
-                             .font(.headline)
-                             .foregroundColor(.purple)
-                    }
-                    
-                    HStack {
-                        if (user?.isVerified ?? false) {
-                            HStack(spacing: 4) {
-                                Image(systemName: "checkmark.seal.fill")
-                                Text("Verified Student")
-                            }
-                            .font(.caption)
-                            .padding(6)
-                            .background(Color.blue.opacity(0.1))
-                            .foregroundColor(.blue)
-                            .cornerRadius(8)
-                        } else {
-                            Button("Verify University") {
-                                showVerificationAlert = true
-                            }
-                            .font(.caption)
-                            .padding(6)
-                            .background(Color.gray.opacity(0.1))
-                            .foregroundColor(.blue)
-                            .cornerRadius(8)
-                        }
-                        
-                        if (user?.isPro ?? false) {
-                            Text("Pro")
-                                .font(.caption)
-                                .padding(6)
-                                .background(Color.yellow.opacity(0.1))
-                                .foregroundColor(.orange)
-                                .cornerRadius(8)
-                        }
-                    }
-                    
-                    if let rank = user?.universityRank {
-                         Text("University Rank: #\(rank)")
-                             .font(.subheadline)
-                             .bold()
-                             .foregroundColor(.purple)
-                             .padding(.top, 4)
-                    }
-                }
-                
-                // Stats Grid
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 20) {
-                    StatCard(title: "Handicap", value: String(format: "%.1f", stats?.handicap ?? 0.0))
-                    StatCard(title: "Rounds", value: "\(stats?.roundsPlayed ?? 0)")
-                    StatCard(title: "Avg Score", value: String(format: "%.1f", stats?.averageScore ?? 0.0))
-                    StatCard(title: "Best Round", value: "\(stats?.bestRound ?? 0)")
-                }
-                .padding()
-                
-                // Badges
-                if let badges = user?.badges, !badges.isEmpty {
-                    VStack(alignment: .leading) {
-                        Text("Badges")
-                            .font(.headline)
-                            .padding(.leading)
-                        ScrollView(.horizontal, showsIndicators: false) {
+        NavigationView {
+            ScrollView {
+                VStack(spacing: 0) {
+                    // Header
+                    if let user = appViewModel.currentUser {
+                        VStack(spacing: 8) {
                             HStack {
-                                ForEach(badges) { badge in
-                                    VStack {
-                                        Image(systemName: badge.icon)
+                                Circle()
+                                    .fill(Color.gray.opacity(0.3))
+                                    .frame(width: 80, height: 80)
+                                    .overlay(
+                                        Image(user.profileImageName)
                                             .resizable()
-                                            .scaledToFit()
-                                            .frame(width: 30, height: 30)
-                                            .foregroundColor(.yellow)
-                                        Text(badge.name)
-                                            .font(.caption2)
+                                            .scaledToFill()
+                                            .clipShape(Circle())
+                                    )
+                                
+                                VStack(alignment: .leading, spacing: 4) {
+                                    HStack {
+                                        Text(user.fullName)
+                                            .font(.title2)
+                                            .fontWeight(.bold)
+                                        
+                                        if user.isVerified {
+                                            Image(systemName: "checkmark.seal.fill")
+                                                .foregroundColor(.blue)
+                                        }
+                                        
+                                        if user.badges.contains(.star) {
+                                            Image(systemName: "star.fill")
+                                                .foregroundColor(.yellow)
+                                        }
                                     }
-                                    .padding()
-                                    .background(Color.gray.opacity(0.05))
-                                    .cornerRadius(10)
+                                    
+                                    Text(user.username)
+                                        .foregroundColor(.gray)
                                 }
                             }
+                            .padding()
+                            
+                            // Stats Cards
+                            HStack(spacing: 8) {
+                                StatsCard(title: "Best Round", value: "\(user.bestRound)", icon: "trophy")
+                                StatsCard(title: "Average Score", value: String(format: "%.1f", user.averageScore), icon: "chart.xyaxis.line")
+                                StatsCard(title: "Rounds Played", value: "\(user.roundsPlayed)", icon: "calendar")
+                            }
                             .padding(.horizontal)
                         }
+                        .padding(.bottom)
+                    }
+                    
+                    // Tab Picker
+                    HStack {
+                        ForEach(ProfileTab.allCases, id: \.self) { tab in
+                            Button(action: {
+                                selectedTab = tab
+                            }) {
+                                Text(tab.rawValue)
+                                    .font(.subheadline)
+                                    .fontWeight(selectedTab == tab ? .bold : .regular)
+                                    .foregroundColor(selectedTab == tab ? .primary : .gray)
+                                    .padding(.vertical, 12)
+                                    .frame(maxWidth: .infinity)
+                                    .background(
+                                        VStack {
+                                            Spacer()
+                                            if selectedTab == tab {
+                                                Rectangle()
+                                                    .fill(Color.primary)
+                                                    .frame(height: 2)
+                                            } else {
+                                                Rectangle()
+                                                    .fill(Color.clear)
+                                                    .frame(height: 1)
+                                            }
+                                        }
+                                    )
+                            }
+                        }
+                    }
+                    .background(Color.white)
+                    
+                    // Content
+                    VStack {
+                        switch selectedTab {
+                        case .rounds:
+                            RoundsListView()
+                        case .rankings:
+                            RankingsView()
+                        case .analytics:
+                            AnalyticsView()
+                        }
+                    }
+                    .background(Color(white: 0.95))
+                    .frame(minHeight: 400) // Ensure some height
+                }
+            }
+            .navigationTitle("Profile")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: {}) {
+                        Image(systemName: "line.3.horizontal")
+                            .foregroundColor(.primary)
                     }
                 }
-                
-                // Analytics
-                NavigationLink(destination: AnalyticsView()) {
-                    Text("View Detailed Analytics")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.green)
-                        .foregroundColor(.white)
-                        .cornerRadius(12)
-                        .padding()
-                }
-                
-                Spacer()
             }
-        }
-        .navigationTitle("Profile")
-        .alert("Verify Email", isPresented: $showVerificationAlert) {
-            TextField("Email", text: $emailInput)
-            Button("Verify") {
-                appViewModel.verifyEmail(emailInput)
-            }
-            Button("Cancel", role: .cancel) { }
-        } message: {
-            Text("Enter your .edu email to verify.")
         }
     }
 }
 
-struct StatCard: View {
-    let title: String
-    let value: String
+struct RoundsListView: View {
+    // Determine this from a ViewModel in real app
+    let rounds = Round.mocks
     
     var body: some View {
-        VStack {
-            Text(value)
-                .font(.title)
-                .bold()
-            Text(title)
-                .font(.caption)
-                .foregroundColor(.gray)
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Recent Rounds")
+                .font(.headline)
+                .padding(.horizontal)
+                .padding(.top)
+            
+            ForEach(rounds) { round in
+                HStack {
+                    VStack(alignment: .leading) {
+                        Text(round.courseName)
+                            .font(.headline)
+                        Text("\(round.location) • \(round.holes) 🏳️")
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                        Text("Played on \(timeString(from: round.date))")
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                    }
+                    Spacer()
+                    
+                    ZStack {
+                        Circle()
+                            .stroke(Color(hex: "0A4A35"), lineWidth: 2)
+                            .frame(width: 50, height: 50)
+                        Text("\(round.score)")
+                            .font(.headline)
+                            .fontWeight(.bold)
+                            .foregroundColor(Color(hex: "0A4A35"))
+                    }
+                }
+                .padding()
+                .background(Color.white)
+                .cornerRadius(12)
+                .padding(.horizontal)
+            }
         }
-        .frame(maxWidth: .infinity)
-        .padding()
-        .background(Color.white)
-        .cornerRadius(12)
-        .shadow(radius: 2)
+        .padding(.bottom)
+    }
+    
+    func timeString(from date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        return formatter.string(from: date)
     }
 }

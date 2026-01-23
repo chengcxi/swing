@@ -1,36 +1,65 @@
 import SwiftUI
 
 struct CourseSearchView: View {
-    @State private var searchText = ""
-    @State private var courses = [
-        GolfCourse(id: "1", name: "Pebble Beach", location: "California", holes: 18, difficulty: 7.5, facilities: CourseFacilities(drivingRange: true, puttingGreen: true), imageUrl: "", rating: 4.8),
-        GolfCourse(id: "2", name: "Augusta National", location: "Georgia", holes: 18, difficulty: 9.0, facilities: CourseFacilities(drivingRange: true, puttingGreen: true), imageUrl: "", rating: 5.0),
-        GolfCourse(id: "3", name: "St Andrews", location: "Scotland", holes: 18, difficulty: 8.0, facilities: CourseFacilities(drivingRange: true, puttingGreen: true), imageUrl: "", rating: 4.9)
-    ]
-    
-    var filteredCourses: [GolfCourse] {
-        if searchText.isEmpty {
-            return courses
-        } else {
-            return courses.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
-        }
-    }
+    @StateObject private var viewModel = CourseViewModel()
     
     var body: some View {
         NavigationView {
-            List(filteredCourses) { course in
-                VStack(alignment: .leading) {
-                    Text(course.name).font(.headline)
-                    Text(course.location).font(.subheadline).foregroundColor(.gray)
-                    HStack {
-                        Image(systemName: "star.fill").foregroundColor(.yellow)
-                        Text(String(format: "%.1f", course.rating))
+            VStack {
+                // Search Bar
+                HStack {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(.gray)
+                    TextField("Search courses or cities...", text: $viewModel.searchText)
+                }
+                .padding()
+                .background(Color.white)
+                .cornerRadius(8)
+                .padding(.horizontal)
+                .padding(.top)
+                
+                // Filters
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 10) {
+                        FilterButton(title: "All Holes", isSelected: true)
+                        FilterButton(title: "Practice Facility", isSelected: false)
+                        FilterButton(title: "Public", isSelected: false)
                     }
-                    .font(.caption)
+                    .padding(.horizontal)
+                }
+                .padding(.vertical, 10)
+                
+                // Course List
+                ScrollView {
+                    LazyVStack(spacing: 16) {
+                        ForEach(viewModel.filteredCourses) { course in
+                            CourseRow(course: course)
+                                .padding(.horizontal)
+                        }
+                    }
                 }
             }
-            .searchable(text: $searchText, prompt: "Search by name, city...")
             .navigationTitle("Courses")
+            .background(Color(white: 0.95))
         }
+    }
+}
+
+struct FilterButton: View {
+    let title: String
+    let isSelected: Bool
+    
+    var body: some View {
+        Text(title)
+            .font(.subheadline)
+            .padding(.vertical, 8)
+            .padding(.horizontal, 16)
+            .background(isSelected ? Color(hex: "0A4A35") : Color.white)
+            .foregroundColor(isSelected ? .white : .primary)
+            .cornerRadius(20)
+            .overlay(
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(Color.gray.opacity(0.3), lineWidth: isSelected ? 0 : 1)
+            )
     }
 }
