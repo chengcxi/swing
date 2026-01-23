@@ -74,8 +74,8 @@ struct PostRow: View {
             HStack(spacing: 20) {
                 Button(action: {
                     viewModel.likePost(postId: post.id)
-                    // Optimistic update for UI interaction (local state needs sync if VM updates published prop)
-                    // In a real app the VM would update the array and View would redraw.
+                    // update for UI interaction (local state needs sync if VM updates published prop)
+                    // In prod the VM would update the array and View would redraw.
                     // For now, toggle visual state locally or rely on VM.
                 }) {
                     HStack {

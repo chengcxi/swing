@@ -14,8 +14,8 @@ class APIService {
     private init() {}
     
     func fetchPosts() -> AnyPublisher<[Post], APIError> {
-        // In a real app, this would make a network request.
-        // For now, we simulate a network delay and return mocks.
+        // In prod, this would make a network request.
+        // For now, simulate a network delay and return mocks.
         
         // Example of real request structure:
         /*

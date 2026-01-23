@@ -123,7 +123,7 @@ struct ProfileView: View {
 }
 
 struct RoundsListView: View {
-    // Determine this from a ViewModel in real app
+    // Determine this from a ViewModel in prod
     let rounds = Round.mocks
     
     var body: some View {

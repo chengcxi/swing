@@ -15,8 +15,8 @@ struct User: Identifiable {
     
     static let mock = User(
         id: UUID(),
-        username: "@jake",
-        fullName: "Jake Shockley",
+        username: "@johndoe",
+        fullName: "John Doe",
         isVerified: true,
         profileImageName: "profile_placeholder",
         university: "UCLA",
