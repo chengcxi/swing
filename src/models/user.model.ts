@@ -7,4 +7,7 @@ export interface User {
   isPro: boolean;
   description?: string;
   favoriteCourse?: string;
+  university?: string;
+  eduEmail?: string;
+  handicap?: number;
 }
