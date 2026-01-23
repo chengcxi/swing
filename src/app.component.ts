@@ -11,17 +11,18 @@ import { PostFeedComponent } from './components/post-feed.component';
 import { CreatePostComponent } from './components/create-post.component';
 import { MessagesComponent } from './components/messages.component';
 import { LoginComponent } from './components/login.component';
+import { UniversityHubComponent } from './components/university-hub.component';
 import { AuthService } from './services/auth.service';
 import { GolfCourse } from './models/golf.model';
 import { CourseDetailsComponent } from './components/course-details.component';
 
-type Screen = 'feed' | 'profile' | 'search' | 'notifications' | 'messages';
+type Screen = 'feed' | 'profile' | 'search' | 'notifications' | 'messages' | 'university';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, HeaderComponent, ProfileComponent, BottomNavComponent, ActivityFeedComponent, SearchComponent, SideMenuComponent, FriendFinderComponent, PostFeedComponent, CreatePostComponent, MessagesComponent, LoginComponent, CourseDetailsComponent],
+  imports: [CommonModule, HeaderComponent, ProfileComponent, BottomNavComponent, ActivityFeedComponent, SearchComponent, SideMenuComponent, FriendFinderComponent, PostFeedComponent, CreatePostComponent, MessagesComponent, LoginComponent, CourseDetailsComponent, UniversityHubComponent],
 })
 export class AppComponent {
   private authService = inject(AuthService);
@@ -55,6 +56,9 @@ export class AppComponent {
     } else if (action === 'profile') {
       this.selectedCourse.set(null);
       this.activeScreen.set('profile');
+    } else if (action === 'university') {
+      this.selectedCourse.set(null);
+      this.activeScreen.set('university');
     }
   }
 
