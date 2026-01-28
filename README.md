@@ -10,4 +10,4 @@
 
 ## iOS Simulation
 
-** iOS 16.0 or higher required
+**iOS 16.0 or higher required
