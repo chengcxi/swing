@@ -1,18 +1,33 @@
 import Foundation
 
-struct User: Identifiable {
+struct User: Identifiable, Codable {
     let id: UUID
-    var username: String
-    var fullName: String
+    var username: String?
+    var fullName: String?
     var isVerified: Bool
-    var profileImageName: String
+    var profileImageName: String?
     var university: String?
-    var handicap: Double
-    var averageScore: Double
-    var bestRound: Int
+    var handicap: Double?
+    var averageScore: Double?
+    var bestRound: Int?
     var roundsPlayed: Int
-    var badges: [Badge]
+    var badges: [Badge]?
     
+    enum CodingKeys: String, CodingKey {
+        case id
+        case username
+        case fullName = "full_name"
+        case isVerified = "is_verified"
+        case profileImageName = "avatar_url"
+        case university
+        case handicap
+        case averageScore = "average_score"
+        case bestRound = "best_round"
+        case roundsPlayed = "rounds_played"
+        case badges
+    }
+    
+    // Default / Mock data can remain but initialized differently
     static let mock = User(
         id: UUID(),
         username: "@johndoe",
