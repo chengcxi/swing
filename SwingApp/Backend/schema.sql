@@ -1,265 +1,253 @@
 -- Enable UUID extension
-create extension if not exists "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- PROFILES (Users)
-create table profiles (
-  id uuid references auth.users not null primary key,
-  username text unique,
-  full_name text,
-  avatar_url text,
-  website text,
-  university text,
-  handicap numeric,
-  average_score numeric,
-  best_round integer,
-  rounds_played integer default 0,
-  badges text[], -- Array of strings for badges
-  is_verified boolean default false,
-  updated_at timestamp with time zone,
-  
-  constraint username_length check (char_length(username) >= 3)
+-- ========================================
+-- PROFILES TABLE
+-- ========================================
+CREATE TABLE IF NOT EXISTS profiles (
+    id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
+    username TEXT UNIQUE NOT NULL,
+    full_name TEXT,
+    avatar_url TEXT,
+    handicap DECIMAL(4,1),
+    bio TEXT,
+    home_course_id UUID,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    
+    CONSTRAINT username_length CHECK (char_length(username) >= 3 AND char_length(username) <= 30),
+    CONSTRAINT username_format CHECK (username ~ '^[a-zA-Z0-9_]+$')
 );
 
-alter table profiles enable row level security;
-
-create policy "Public profiles are viewable by everyone."
-  on profiles for select
-  using ( true );
-
-create policy "Users can insert their own profile."
-  on profiles for insert
-  with check ( auth.uid() = id );
-
-create policy "Users can update own profile."
-  on profiles for update
-  using ( auth.uid() = id );
-
--- TRIGGER for New User -> Profile
-create or replace function public.handle_new_user() 
-returns trigger as $$
-begin
-  insert into public.profiles (id, username, full_name, avatar_url)
-  values (new.id, new.raw_user_meta_data->>'username', new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'avatar_url');
-  return new;
-end;
-$$ language plpgsql security definer;
-
-create or replace trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute procedure public.handle_new_user();
-
--- COURSES
-create table courses (
-  id uuid default uuid_generate_v4() primary key,
-  name text not null,
-  location text,
-  holes integer default 18,
-  difficulty numeric,
-  has_driving_range boolean default false,
-  has_putting_green boolean default false,
-  latitude double precision,
-  longitude double precision,
-  google_place_id text unique,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+-- ========================================
+-- GOLF COURSES TABLE
+-- ========================================
+CREATE TABLE IF NOT EXISTS golf_courses (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL,
+    address TEXT NOT NULL,
+    city TEXT NOT NULL,
+    state TEXT,
+    country TEXT NOT NULL DEFAULT 'USA',
+    latitude DECIMAL(10, 8) NOT NULL,
+    longitude DECIMAL(11, 8) NOT NULL,
+    holes INTEGER DEFAULT 18,
+    par INTEGER,
+    course_rating DECIMAL(4,1),
+    slope INTEGER,
+    phone TEXT,
+    website TEXT,
+    description TEXT,
+    image_url TEXT,
+    google_place_id TEXT UNIQUE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-alter table courses enable row level security;
+-- Add foreign key for home course
+ALTER TABLE profiles 
+ADD CONSTRAINT fk_home_course 
+FOREIGN KEY (home_course_id) REFERENCES golf_courses(id) ON DELETE SET NULL;
 
-create policy "Courses are viewable by everyone."
-  on courses for select
-  using ( true );
-
--- ROUNDS
-create table rounds (
-  id uuid default uuid_generate_v4() primary key,
-  user_id uuid references profiles(id) not null,
-  course_id uuid references courses(id),
-  course_name text, -- De-normalized in case course is deleted or custom
-  location text,
-  score integer not null,
-  holes integer default 18,
-  date timestamp with time zone not null,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+-- ========================================
+-- ROUNDS TABLE
+-- ========================================
+CREATE TABLE IF NOT EXISTS rounds (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+    course_id UUID REFERENCES golf_courses(id) ON DELETE SET NULL,
+    score INTEGER NOT NULL,
+    date_played DATE NOT NULL DEFAULT CURRENT_DATE,
+    notes TEXT,
+    weather TEXT,
+    photos TEXT[],
+    putts INTEGER,
+    fairways_hit INTEGER,
+    greens_in_regulation INTEGER,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-alter table rounds enable row level security;
-
-create policy "Rounds are viewable by everyone."
-  on rounds for select
-  using ( true );
-
-create policy "Users can insert their own rounds."
-  on rounds for insert
-  with check ( auth.uid() = user_id );
-
--- POSTS
-create table posts (
-  id uuid default uuid_generate_v4() primary key,
-  user_id uuid references profiles(id) not null,
-  round_id uuid references rounds(id),
-  caption text,
-  image_url text,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+-- ========================================
+-- FOLLOWS TABLE
+-- ========================================
+CREATE TABLE IF NOT EXISTS follows (
+    follower_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+    following_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    PRIMARY KEY (follower_id, following_id),
+    CONSTRAINT no_self_follow CHECK (follower_id != following_id)
 );
 
-alter table posts enable row level security;
-
-create policy "Posts are viewable by everyone."
-  on posts for select
-  using ( true );
-
-create policy "Users can insert their own posts."
-  on posts for insert
-  with check ( auth.uid() = user_id );
-
--- COMMENTS
-create table comments (
-  id uuid default uuid_generate_v4() primary key,
-  post_id uuid references posts(id) not null,
-  user_id uuid references profiles(id) not null,
-  text text not null,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+-- ========================================
+-- LIKES TABLE
+-- ========================================
+CREATE TABLE IF NOT EXISTS likes (
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+    round_id UUID REFERENCES rounds(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    PRIMARY KEY (user_id, round_id)
 );
 
-alter table comments enable row level security;
-
-create policy "Comments are viewable by everyone."
-  on comments for select
-  using ( true );
-
-create policy "Users can insert their own comments."
-  on comments for insert
-  with check ( auth.uid() = user_id );
-
--- LIKES
-create table likes (
-  id uuid default uuid_generate_v4() primary key,
-  post_id uuid references posts(id) not null,
-  user_id uuid references profiles(id) not null,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  unique(post_id, user_id)
+-- ========================================
+-- COMMENTS TABLE
+-- ========================================
+CREATE TABLE IF NOT EXISTS comments (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+    round_id UUID REFERENCES rounds(id) ON DELETE CASCADE NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-alter table likes enable row level security;
+-- ========================================
+-- INDEXES
+-- ========================================
+CREATE INDEX IF NOT EXISTS idx_profiles_username ON profiles(username);
+CREATE INDEX IF NOT EXISTS idx_golf_courses_location ON golf_courses(latitude, longitude);
+CREATE INDEX IF NOT EXISTS idx_golf_courses_google_place_id ON golf_courses(google_place_id);
+CREATE INDEX IF NOT EXISTS idx_rounds_user_id ON rounds(user_id);
+CREATE INDEX IF NOT EXISTS idx_rounds_course_id ON rounds(course_id);
+CREATE INDEX IF NOT EXISTS idx_rounds_date_played ON rounds(date_played DESC);
+CREATE INDEX IF NOT EXISTS idx_rounds_created_at ON rounds(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_follows_follower ON follows(follower_id);
+CREATE INDEX IF NOT EXISTS idx_follows_following ON follows(following_id);
+CREATE INDEX IF NOT EXISTS idx_likes_round ON likes(round_id);
+CREATE INDEX IF NOT EXISTS idx_comments_round ON comments(round_id);
 
-create policy "Likes are viewable by everyone."
-  on likes for select
-  using ( true );
+-- ========================================
+-- ROW LEVEL SECURITY
+-- ========================================
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE golf_courses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE rounds ENABLE ROW LEVEL SECURITY;
+ALTER TABLE follows ENABLE ROW LEVEL SECURITY;
+ALTER TABLE likes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
 
-create policy "Users can insert their own likes."
-  on likes for insert
-  with check ( auth.uid() = user_id );
+-- Profiles policies
+CREATE POLICY "Profiles are viewable by everyone" ON profiles
+    FOR SELECT USING (true);
 
-create policy "Users can delete their own likes."
-  on likes for delete
-  using ( auth.uid() = user_id );
+CREATE POLICY "Users can insert their own profile" ON profiles
+    FOR INSERT WITH CHECK (auth.uid() = id);
 
--- FRIENDSHIPS
-create table friendships (
-  id uuid default uuid_generate_v4() primary key,
-  follower_id uuid references profiles(id) not null,
-  following_id uuid references profiles(id) not null,
-  status text check (status in ('pending', 'accepted')) default 'pending',
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  unique(follower_id, following_id)
-);
+CREATE POLICY "Users can update their own profile" ON profiles
+    FOR UPDATE USING (auth.uid() = id);
 
-alter table friendships enable row level security;
+-- Golf courses policies
+CREATE POLICY "Golf courses are viewable by everyone" ON golf_courses
+    FOR SELECT USING (true);
 
-create policy "Friendships are viewable by everyone."
-  on friendships for select
-  using ( true );
+CREATE POLICY "Authenticated users can create courses" ON golf_courses
+    FOR INSERT WITH CHECK (auth.role() = 'authenticated');
 
-create policy "Users can insert their own friendships."
-  on friendships for insert
-  with check ( auth.uid() = follower_id );
+-- Rounds policies
+CREATE POLICY "Rounds are viewable by everyone" ON rounds
+    FOR SELECT USING (true);
 
-create policy "Users can update their own friendships."
-  on friendships for update
-  using ( auth.uid() = following_id ); -- e.g. accepting a request
+CREATE POLICY "Users can create their own rounds" ON rounds
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
 
--- STORAGE BUCKETS (Script to be run in SQL Editor or Storage UI)
--- insert into storage.buckets (id, name, public) values ('avatars', 'avatars', true);
--- insert into storage.buckets (id, name, public) values ('post_images', 'post_images', true);
--- create policy "Avatar images are publicly accessible." on storage.objects for select using ( bucket_id = 'avatars' );
--- create policy "Anyone can upload an avatar." on storage.objects for insert with check ( bucket_id = 'avatars' ); 
+CREATE POLICY "Users can update their own rounds" ON rounds
+    FOR UPDATE USING (auth.uid() = user_id);
 
+CREATE POLICY "Users can delete their own rounds" ON rounds
+    FOR DELETE USING (auth.uid() = user_id);
+
+-- Follows policies
+CREATE POLICY "Follows are viewable by everyone" ON follows
+    FOR SELECT USING (true);
+
+CREATE POLICY "Users can follow others" ON follows
+    FOR INSERT WITH CHECK (auth.uid() = follower_id);
+
+CREATE POLICY "Users can unfollow" ON follows
+    FOR DELETE USING (auth.uid() = follower_id);
+
+-- Likes policies
+CREATE POLICY "Likes are viewable by everyone" ON likes
+    FOR SELECT USING (true);
+
+CREATE POLICY "Users can like rounds" ON likes
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can unlike rounds" ON likes
+    FOR DELETE USING (auth.uid() = user_id);
+
+-- Comments policies
+CREATE POLICY "Comments are viewable by everyone" ON comments
+    FOR SELECT USING (true);
+
+CREATE POLICY "Users can create comments" ON comments
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own comments" ON comments
+    FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own comments" ON comments
+    FOR DELETE USING (auth.uid() = user_id);
+
+-- ========================================
 -- FUNCTIONS & TRIGGERS
+-- ========================================
 
--- 1. Update Profile Stats on New Round
-create or replace function public.update_profile_stats()
-returns trigger as $$
-declare
-  _user_id uuid;
-  _new_avg numeric;
-  _best_round integer;
-  _rounds_count integer;
-  _handicap numeric;
-begin
-  _user_id := new.user_id;
+-- Auto-update updated_at timestamp
+CREATE OR REPLACE FUNCTION update_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
-  -- Calculate Stats
-  select 
-    count(*), 
-    avg(score), 
-    min(score)
-  into 
-    _rounds_count, 
-    _new_avg, 
-    _best_round
-  from rounds
-  where user_id = _user_id;
-  
-  -- Simple Handicap Calculation (Average - 72) * 0.96 roughly, just for demo
-  -- Limit to min 0
-  _handicap := greatest(0, (_new_avg - 72) * 0.96);
+CREATE TRIGGER update_profiles_updated_at
+    BEFORE UPDATE ON profiles
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
-  update profiles
-  set 
-    rounds_played = _rounds_count,
-    average_score = round(_new_avg, 1),
-    best_round = _best_round,
-    handicap = round(_handicap, 1),
-    updated_at = now()
-  where id = _user_id;
+CREATE TRIGGER update_golf_courses_updated_at
+    BEFORE UPDATE ON golf_courses
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
-  return new;
-end;
-$$ language plpgsql security definer;
+CREATE TRIGGER update_rounds_updated_at
+    BEFORE UPDATE ON rounds
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
-create or replace trigger on_round_created
-  after insert on rounds
-  for each row execute procedure public.update_profile_stats();
+CREATE TRIGGER update_comments_updated_at
+    BEFORE UPDATE ON comments
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
--- 2. University Verification (Simple Domain Check)
-create or replace function public.get_university_from_email(email text)
-returns text as $$
-declare
-  domain text;
-begin
-  domain := split_part(email, '@', 2);
-  if domain like '%.edu' then
-    -- Very basic mapping. In production, use a lookup table.
-    return initcap(split_part(domain, '.', 1)); 
-  else
-    return null;
-  end if;
-end;
-$$ language plpgsql;
+-- ========================================
+-- STORAGE BUCKET POLICIES
+-- ========================================
 
--- Update handle_new_user to use university check
-create or replace function public.handle_new_user() 
-returns trigger as $$
-begin
-  insert into public.profiles (id, username, full_name, avatar_url, university, is_verified)
-  values (
-    new.id, 
-    new.raw_user_meta_data->>'username', 
-    new.raw_user_meta_data->>'full_name', 
-    new.raw_user_meta_data->>'avatar_url',
-    public.get_university_from_email(new.email),
-    case when new.email like '%.edu' then true else false end
-  );
-  return new;
-end;
-$$ language plpgsql security definer;
+-- Bucket: round-photos (Public)
+CREATE POLICY "Authenticated users can upload round photos"
+ON storage.objects FOR INSERT TO authenticated
+WITH CHECK (bucket_id = 'round-photos');
+
+CREATE POLICY "Round photos are public"
+ON storage.objects FOR SELECT TO public
+USING (bucket_id = 'round-photos');
+
+CREATE POLICY "Users can delete round photos"
+ON storage.objects FOR DELETE TO authenticated
+USING (bucket_id = 'round-photos');
+
+-- Bucket: avatars (Public)
+CREATE POLICY "Users can upload avatar"
+ON storage.objects FOR INSERT TO authenticated
+WITH CHECK (bucket_id = 'avatars');
+
+CREATE POLICY "Avatars are public"
+ON storage.objects FOR SELECT TO public
+USING (bucket_id = 'avatars');
+
+CREATE POLICY "Users can manage their avatar"
+ON storage.objects FOR UPDATE TO authenticated
+USING (bucket_id = 'avatars');
+
+CREATE POLICY "Users can delete their avatar"
+ON storage.objects FOR DELETE TO authenticated
+USING (bucket_id = 'avatars');

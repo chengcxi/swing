@@ -1,30 +1,100 @@
 import Foundation
 
-struct Round: Identifiable, Codable {
+struct Round: Codable, Identifiable, Hashable {
     let id: UUID
-    var userId: UUID // Added to link to User
-    var courseId: UUID?
-    var courseName: String?
-    var location: String?
+    let userId: UUID
+    let courseId: UUID
     var score: Int
-    var date: Date
-    var holes: Int
+    var datePlayed: Date
+    var notes: String?
+    var weather: String?
+    var photos: [String]?
+    var putts: Int?
+    var fairwaysHit: Int?
+    var greensInRegulation: Int?
+    let createdAt: Date
+    var updatedAt: Date
     
-    enum CodingKeys: String, CodingKey {
-        case id
-        case userId = "user_id"
-        case courseId = "course_id"
-        case courseName = "course_name"
-        case location
-        case score
-        case date
-        case holes
+    // Joined relations
+    var course: GolfCourse?
+    var user: Profile?
+    var likesCount: Int?
+    var commentsCount: Int?
+    
+    var scoreDisplay: String {
+        guard let par = course?.par else { return "\(score)" }
+        let differential = score - par
+        if differential > 0 {
+            return "+\(differential)"
+        } else if differential < 0 {
+            return "\(differential)"
+        }
+        return "E"
     }
     
-    // Mocks updated to include userId placeholder
-    static let mocks: [Round] = [
-        Round(id: UUID(), userId: UUID(), courseId: UUID(), courseName: "Riviera Country Club", location: "Pacific Palisades, CA", score: 103, date: Date().addingTimeInterval(-86400 * 5), holes: 18),
-        Round(id: UUID(), userId: UUID(), courseId: UUID(), courseName: "Sandpiper Golf Club", location: "Goleta, CA", score: 87, date: Date().addingTimeInterval(-86400 * 20), holes: 18),
-        Round(id: UUID(), userId: UUID(), courseId: UUID(), courseName: "Rusic Canyon Golf Course", location: "Moorpark, CA", score: 92, date: Date().addingTimeInterval(-86400 * 30), holes: 18)
-    ]
+    var formattedDate: String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        return formatter.string(from: datePlayed)
+    }
+    
+    var timeAgo: String {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .abbreviated
+        return formatter.localizedString(for: createdAt, relativeTo: Date())
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case id, score, notes, weather, photos, putts
+        case userId = "user_id"
+        case courseId = "course_id"
+        case datePlayed = "date_played"
+        case fairwaysHit = "fairways_hit"
+        case greensInRegulation = "greens_in_regulation"
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+        case course, user
+        case likesCount = "likes_count"
+        case commentsCount = "comments_count"
+    }
+}
+
+struct RoundInsert: Codable {
+    let userId: UUID
+    let courseId: UUID
+    var score: Int
+    var datePlayed: Date
+    var notes: String?
+    var weather: String?
+    var photos: [String]?
+    var putts: Int?
+    var fairwaysHit: Int?
+    var greensInRegulation: Int?
+    
+    enum CodingKeys: String, CodingKey {
+        case score, notes, weather, photos, putts
+        case userId = "user_id"
+        case courseId = "course_id"
+        case datePlayed = "date_played"
+        case fairwaysHit = "fairways_hit"
+        case greensInRegulation = "greens_in_regulation"
+    }
+}
+
+struct RoundUpdate: Codable {
+    var score: Int?
+    var datePlayed: Date?
+    var notes: String?
+    var weather: String?
+    var photos: [String]?
+    var putts: Int?
+    var fairwaysHit: Int?
+    var greensInRegulation: Int?
+    
+    enum CodingKeys: String, CodingKey {
+        case score, notes, weather, photos, putts
+        case datePlayed = "date_played"
+        case fairwaysHit = "fairways_hit"
+        case greensInRegulation = "greens_in_regulation"
+    }
 }
