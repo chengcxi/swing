@@ -1,64 +1,54 @@
 import SwiftUI
 
+// CourseRow is now replaced by CourseListCard in CourseSearchView.swift
+// Keeping this file for any legacy references
+
 struct CourseRow: View {
     let course: Course
-    
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(course.name)
-                .font(.headline)
-            
-            HStack {
-                Image(systemName: "mappin.and.ellipse")
-                    .foregroundColor(.gray)
-                Text(course.location)
-                    .font(.subheadline)
-                    .foregroundColor(.gray)
+        HStack(spacing: 14) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(GolfrColors.primaryMedium.opacity(0.1))
+                    .frame(width: 60, height: 60)
+                Image(systemName: "figure.golf")
+                    .font(.system(size: 22))
+                    .foregroundColor(GolfrColors.primaryMedium.opacity(0.5))
             }
-            
-            HStack(spacing: 12) {
-                Label("\(course.holes) Holes", systemImage: "flag")
-                    .font(.caption)
-                    .padding(6)
-                    .background(Color.gray.opacity(0.1))
-                    .cornerRadius(6)
-                
-                Label("Difficulty: \(String(format: "%.1f", course.difficulty))", systemImage: "gauge")
-                    .font(.caption)
-                    .padding(6)
-                    .background(Color.gray.opacity(0.1))
-                    .cornerRadius(6)
-            }
-            
-            HStack(spacing: 12) {
-                if course.hasDrivingRange {
-                    HStack(spacing: 4) {
-                        Image(systemName: "sun.max")
-                        Text("driving range")
-                    }
-                    .font(.caption)
-                    .foregroundColor(Color(hex: "0A4A35"))
-                    .padding(6)
-                    .background(Color(hex: "0A4A35").opacity(0.1))
-                    .cornerRadius(6)
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(course.name)
+                    .font(GolfrFonts.headline())
+                    .foregroundColor(GolfrColors.textPrimary)
+
+                HStack(spacing: 4) {
+                    Image(systemName: "mappin.and.ellipse")
+                        .font(.system(size: 10))
+                    Text(course.location)
+                        .font(GolfrFonts.caption())
                 }
-                
-                if course.hasPuttingGreen {
-                    HStack(spacing: 4) {
-                        Image(systemName: "leaf")
-                        Text("putting green")
+                .foregroundColor(GolfrColors.textSecondary)
+
+                HStack(spacing: 8) {
+                    Text("\(course.holes) Holes")
+                        .golfrChip(color: GolfrColors.primary)
+
+                    if course.hasDrivingRange {
+                        Text("Range")
+                            .golfrChip(color: GolfrColors.primaryMedium)
                     }
-                    .font(.caption)
-                    .foregroundColor(Color(hex: "0A4A35"))
-                    .padding(6)
-                    .background(Color(hex: "0A4A35").opacity(0.1))
-                    .cornerRadius(6)
+
+                    if course.hasPuttingGreen {
+                        Text("Putting")
+                            .golfrChip(color: GolfrColors.primaryMedium)
+                    }
                 }
             }
+
+            Spacer()
         }
-        .padding()
-        .background(Color.white)
-        .cornerRadius(12)
-        .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+        .padding(12)
+        .golfrCard(cornerRadius: 14)
     }
 }
