@@ -19,9 +19,11 @@ struct GolfCourse: Codable, Identifiable, Hashable {
     var description: String?
     var imageUrl: String?
     var googlePlaceId: String?
+    var yardage: Int?
     let createdAt: Date
     var updatedAt: Date
     
+    // Computed
     var coordinate: CLLocationCoordinate2D {
         CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
     }
@@ -34,7 +36,7 @@ struct GolfCourse: Codable, Identifiable, Hashable {
     
     enum CodingKeys: String, CodingKey {
         case id, name, address, city, state, country
-        case latitude, longitude, holes, par, slope
+        case latitude, longitude, holes, par, slope, yardage
         case phone, website, description
         case courseRating = "course_rating"
         case imageUrl = "image_url"
@@ -58,16 +60,48 @@ struct GolfCourseInsert: Codable {
     var slope: Int?
     var phone: String?
     var website: String?
-    var description: String?
-    var imageUrl: String?
     var googlePlaceId: String?
     
     enum CodingKeys: String, CodingKey {
         case name, address, city, state, country
         case latitude, longitude, holes, par, slope
-        case phone, website, description
+        case phone, website
         case courseRating = "course_rating"
-        case imageUrl = "image_url"
         case googlePlaceId = "google_place_id"
+    }
+}
+
+struct FavoriteCourse: Codable, Identifiable {
+    let id: UUID
+    let userId: UUID
+    let courseId: UUID
+    var rank: Int
+    let createdAt: Date
+    var course: GolfCourse?
+    
+    enum CodingKeys: String, CodingKey {
+        case id, rank, course
+        case userId = "user_id"
+        case courseId = "course_id"
+        case createdAt = "created_at"
+    }
+}
+
+struct CoursePreference: Codable, Identifiable {
+    let id: UUID
+    let userId: UUID
+    let winnerId: UUID
+    let loserId: UUID
+    let createdAt: Date
+    var winner: GolfCourse?
+    var loser: GolfCourse?
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case userId = "user_id"
+        case winnerId = "winner_id"
+        case loserId = "loser_id"
+        case createdAt = "created_at"
+        case winner, loser
     }
 }

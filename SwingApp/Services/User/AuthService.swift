@@ -59,7 +59,7 @@ class AuthService: ObservableObject {
         isLoading = true
         defer { isLoading = false }
         
-        // Validate username availability
+        // Validate username
         let existing: [Profile] = try await supabase
             .from("profiles")
             .select("id")
@@ -71,22 +71,13 @@ class AuthService: ObservableObject {
             throw AuthError.usernameExists
         }
         
-        // Create auth user
-        let response = try await supabase.auth.signUp(
-            email: email,
-            password: password
-        )
+        let response = try await supabase.auth.signUp(email: email, password: password)
         
         guard let user = response.user else {
             throw AuthError.signUpFailed
         }
         
-        // Create profile
-        let profile = ProfileInsert(
-            id: user.id,
-            username: username,
-            fullName: fullName
-        )
+        let profile = ProfileInsert(id: user.id, username: username, fullName: fullName)
         
         try await supabase
             .from("profiles")
@@ -104,26 +95,11 @@ class AuthService: ObservableObject {
         isLoading = true
         defer { isLoading = false }
         
-        let session = try await supabase.auth.signIn(
-            email: email,
-            password: password
-        )
+        let session = try await supabase.auth.signIn(email: email, password: password)
         
         currentUser = session.user
         isAuthenticated = true
         await loadCurrentProfile()
-    }
-    
-    // MARK: - Magic Link
-    
-    func signInWithMagicLink(email: String) async throws {
-        isLoading = true
-        defer { isLoading = false }
-        
-        try await supabase.auth.signInWithOTP(
-            email: email,
-            redirectTo: URL(string: "swing://auth/callback")
-        )
     }
     
     // MARK: - Sign In with Apple
@@ -138,16 +114,12 @@ class AuthService: ObservableObject {
         }
         
         let session = try await supabase.auth.signInWithIdToken(
-            credentials: .init(
-                provider: .apple,
-                idToken: tokenString
-            )
+            credentials: .init(provider: .apple, idToken: tokenString)
         )
         
         currentUser = session.user
         isAuthenticated = true
         
-        // Check if profile exists, create if not
         await loadCurrentProfile()
         
         if currentProfile == nil {
@@ -155,24 +127,16 @@ class AuthService: ObservableObject {
                 ?? "user_\(UUID().uuidString.prefix(8))"
             
             let fullName: String? = {
-                if let givenName = credential.fullName?.givenName,
-                   let familyName = credential.fullName?.familyName {
-                    return "\(givenName) \(familyName)"
+                if let given = credential.fullName?.givenName,
+                   let family = credential.fullName?.familyName {
+                    return "\(given) \(family)"
                 }
                 return nil
             }()
             
-            let profile = ProfileInsert(
-                id: session.user.id,
-                username: username,
-                fullName: fullName
-            )
+            let profile = ProfileInsert(id: session.user.id, username: username, fullName: fullName)
             
-            try await supabase
-                .from("profiles")
-                .insert(profile)
-                .execute()
-            
+            try await supabase.from("profiles").insert(profile).execute()
             await loadCurrentProfile()
         }
     }
@@ -186,16 +150,7 @@ class AuthService: ObservableObject {
         isAuthenticated = false
     }
     
-    // MARK: - Password Reset
-    
-    func resetPassword(email: String) async throws {
-        try await supabase.auth.resetPasswordForEmail(
-            email,
-            redirectTo: URL(string: "swing://auth/reset-password")
-        )
-    }
-    
-    // MARK: - Profile Management
+    // MARK: - Profile
     
     func loadCurrentProfile() async {
         guard let userId = currentUser?.id else { return }
@@ -203,7 +158,7 @@ class AuthService: ObservableObject {
         do {
             let profile: Profile = try await supabase
                 .from("profiles")
-                .select()
+                .select("*, university:universities(*)")
                 .eq("id", value: userId.uuidString)
                 .single()
                 .execute()
@@ -230,26 +185,16 @@ class AuthService: ObservableObject {
     }
 }
 
-// MARK: - Auth Errors
 enum AuthError: LocalizedError {
-    case signUpFailed
-    case notAuthenticated
-    case profileNotFound
-    case usernameExists
-    case invalidCredential
+    case signUpFailed, notAuthenticated, profileNotFound, usernameExists, invalidCredential
     
     var errorDescription: String? {
         switch self {
-        case .signUpFailed:
-            return "Failed to create account. Please try again."
-        case .notAuthenticated:
-            return "You must be signed in to perform this action."
-        case .profileNotFound:
-            return "Profile not found."
-        case .usernameExists:
-            return "This username is already taken."
-        case .invalidCredential:
-            return "Invalid authentication credential."
+        case .signUpFailed: return "Failed to create account."
+        case .notAuthenticated: return "You must be signed in."
+        case .profileNotFound: return "Profile not found."
+        case .usernameExists: return "Username already taken."
+        case .invalidCredential: return "Invalid credential."
         }
     }
 }

@@ -49,7 +49,7 @@ class SocialService: ObservableObject {
         
         let follows: [Follow] = try await supabase
             .from("follows")
-            .select("follower_id")
+            .select("follower_id, following_id, created_at")
             .eq("follower_id", value: currentUserId.uuidString)
             .eq("following_id", value: userId.uuidString)
             .execute()
@@ -83,14 +83,14 @@ class SocialService: ObservableObject {
     func fetchFollowCounts(userId: UUID) async throws -> FollowCounts {
         async let followers: [Follow] = supabase
             .from("follows")
-            .select("follower_id")
+            .select("follower_id, following_id, created_at")
             .eq("following_id", value: userId.uuidString)
             .execute()
             .value
         
         async let following: [Follow] = supabase
             .from("follows")
-            .select("following_id")
+            .select("follower_id, following_id, created_at")
             .eq("follower_id", value: userId.uuidString)
             .execute()
             .value
@@ -141,7 +141,7 @@ class SocialService: ObservableObject {
         
         let likes: [Like] = try await supabase
             .from("likes")
-            .select("user_id")
+            .select("user_id, round_id, created_at")
             .eq("user_id", value: currentUserId.uuidString)
             .eq("round_id", value: roundId.uuidString)
             .execute()
@@ -153,7 +153,7 @@ class SocialService: ObservableObject {
     func fetchLikesCount(roundId: UUID) async throws -> Int {
         let likes: [Like] = try await supabase
             .from("likes")
-            .select("user_id")
+            .select("user_id, round_id, created_at")
             .eq("round_id", value: roundId.uuidString)
             .execute()
             .value

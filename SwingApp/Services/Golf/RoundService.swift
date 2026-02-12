@@ -7,17 +7,17 @@ class RoundService: ObservableObject {
     @Published var userRounds: [Round] = []
     @Published var feedRounds: [Round] = []
     @Published var isLoading = false
-    @Published var error: Error?
     
     private var feedOffset = 0
     private var hasMoreFeed = true
     
-    // MARK: - Create Round
+    // MARK: - Create Round with Hole Scores
     
-    func createRound(_ round: RoundInsert) async throws -> Round {
+    func createRound(_ round: RoundInsert, holeScores: [HoleScoreInsert]? = nil) async throws -> Round {
         isLoading = true
         defer { isLoading = false }
         
+        // Insert round
         let newRound: Round = try await supabase
             .from("rounds")
             .insert(round)
@@ -26,13 +26,39 @@ class RoundService: ObservableObject {
             .execute()
             .value
         
+        // Insert hole scores if provided
+        if let scores = holeScores {
+            let scoresWithRoundId = scores.map { score -> HoleScoreInsert in
+                HoleScoreInsert(
+                    roundId: newRound.id,
+                    holeNumber: score.holeNumber,
+                    par: score.par,
+                    score: score.score,
+                    putts: score.putts,
+                    fairwayHit: score.fairwayHit,
+                    greenInRegulation: score.greenInRegulation,
+                    penalties: score.penalties,
+                    clubUsedOffTee: score.clubUsedOffTee,
+                    notes: score.notes
+                )
+            }
+            
+            try await supabase
+                .from("hole_scores")
+                .insert(scoresWithRoundId)
+                .execute()
+        }
+        
+        // Recalculate handicap
+        try await recalculateHandicap()
+        
         userRounds.insert(newRound, at: 0)
         feedRounds.insert(newRound, at: 0)
         
         return newRound
     }
     
-    // MARK: - Fetch User Rounds
+    // MARK: - Fetch Rounds
     
     func fetchUserRounds(userId: UUID) async throws -> [Round] {
         isLoading = true
@@ -40,7 +66,7 @@ class RoundService: ObservableObject {
         
         let rounds: [Round] = try await supabase
             .from("rounds")
-            .select("*, course:golf_courses(*), user:profiles(*)")
+            .select("*, course:golf_courses(*), user:profiles(*), hole_scores(*)")
             .eq("user_id", value: userId.uuidString)
             .order("date_played", ascending: false)
             .execute()
@@ -53,12 +79,10 @@ class RoundService: ObservableObject {
         return rounds
     }
     
-    // MARK: - Fetch Single Round
-    
     func fetchRound(id: UUID) async throws -> Round {
         let round: Round = try await supabase
             .from("rounds")
-            .select("*, course:golf_courses(*), user:profiles(*)")
+            .select("*, course:golf_courses(*), user:profiles(*), hole_scores(*)")
             .eq("id", value: id.uuidString)
             .single()
             .execute()
@@ -67,7 +91,7 @@ class RoundService: ObservableObject {
         return round
     }
     
-    // MARK: - Global Feed
+    // MARK: - Feed
     
     func fetchFeed(refresh: Bool = false) async throws -> [Round] {
         if refresh {
@@ -104,54 +128,6 @@ class RoundService: ObservableObject {
         return rounds
     }
     
-    // MARK: - Following Feed
-    
-    func fetchFollowingFeed(userId: UUID, limit: Int = 20, offset: Int = 0) async throws -> [Round] {
-        let follows: [Follow] = try await supabase
-            .from("follows")
-            .select("following_id")
-            .eq("follower_id", value: userId.uuidString)
-            .execute()
-            .value
-        
-        let followingIds = follows.map { $0.followingId.uuidString }
-        
-        guard !followingIds.isEmpty else { return [] }
-        
-        let rounds: [Round] = try await supabase
-            .from("rounds")
-            .select("*, course:golf_courses(*), user:profiles(*)")
-            .in("user_id", values: followingIds)
-            .order("created_at", ascending: false)
-            .range(from: offset, to: offset + limit - 1)
-            .execute()
-            .value
-        
-        return rounds
-    }
-    
-    // MARK: - Update Round
-    
-    func updateRound(id: UUID, update: RoundUpdate) async throws -> Round {
-        let round: Round = try await supabase
-            .from("rounds")
-            .update(update)
-            .eq("id", value: id.uuidString)
-            .select("*, course:golf_courses(*), user:profiles(*)")
-            .single()
-            .execute()
-            .value
-        
-        if let index = userRounds.firstIndex(where: { $0.id == id }) {
-            userRounds[index] = round
-        }
-        if let index = feedRounds.firstIndex(where: { $0.id == id }) {
-            feedRounds[index] = round
-        }
-        
-        return round
-    }
-    
     // MARK: - Delete Round
     
     func deleteRound(id: UUID) async throws {
@@ -163,35 +139,60 @@ class RoundService: ObservableObject {
         
         userRounds.removeAll { $0.id == id }
         feedRounds.removeAll { $0.id == id }
+        
+        try await recalculateHandicap()
     }
     
-    // MARK: - User Statistics
+    // MARK: - Handicap Calculation
     
-    func fetchUserStats(userId: UUID) async throws -> UserStats {
+    func recalculateHandicap() async throws {
+        guard let userId = AuthService.shared.currentUser?.id else { return }
+        
+        // Get last 20 rounds with course info
         let rounds: [Round] = try await supabase
             .from("rounds")
-            .select("score, course_id")
+            .select("*, course:golf_courses(course_rating, slope)")
             .eq("user_id", value: userId.uuidString)
+            .order("date_played", ascending: false)
+            .limit(20)
             .execute()
             .value
         
-        guard !rounds.isEmpty else {
-            return UserStats(
-                totalRounds: 0,
-                averageScore: nil,
-                bestScore: nil,
-                coursesPlayed: 0
-            )
+        guard rounds.count >= 5 else {
+            // Need at least 5 rounds
+            return
         }
         
-        let scores = rounds.map { $0.score }
-        let uniqueCourses = Set(rounds.map { $0.courseId }).count
+        // Calculate differentials
+        let differentials = rounds.compactMap { round -> Double? in
+            guard let rating = round.course?.courseRating,
+                  let slope = round.course?.slope else { return nil }
+            return (Double(round.score) - rating) * 113 / Double(slope)
+        }
         
-        return UserStats(
-            totalRounds: rounds.count,
-            averageScore: Double(scores.reduce(0, +)) / Double(scores.count),
-            bestScore: scores.min(),
-            coursesPlayed: uniqueCourses
-        )
+        guard !differentials.isEmpty else { return }
+        
+        // Use best differentials based on count
+        let numToUse: Int
+        switch differentials.count {
+        case 5...6: numToUse = 1
+        case 7...8: numToUse = 2
+        case 9...10: numToUse = 3
+        case 11...12: numToUse = 4
+        case 13...14: numToUse = 5
+        case 15...16: numToUse = 6
+        case 17: numToUse = 7
+        case 18: numToUse = 8
+        case 19: numToUse = 9
+        default: numToUse = 10
+        }
+        
+        let sorted = differentials.sorted()
+        let best = Array(sorted.prefix(numToUse))
+        let average = best.reduce(0, +) / Double(best.count)
+        let handicap = average * Config.handicapMultiplier
+        
+        // Update profile
+        try await AuthService.shared.updateProfile(ProfileUpdate(handicap: handicap))
     }
 }

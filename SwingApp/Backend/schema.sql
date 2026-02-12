@@ -1,17 +1,34 @@
--- Enable UUID extension
+-- Enable extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- ========================================
--- PROFILES TABLE
--- ========================================
+-- ================================================
+-- UNIVERSITIES
+-- ================================================
+CREATE TABLE IF NOT EXISTS universities (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL,
+    short_name TEXT,
+    email_domain TEXT UNIQUE NOT NULL,
+    logo_url TEXT,
+    primary_color TEXT,
+    secondary_color TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ================================================
+-- PROFILES
+-- ================================================
 CREATE TABLE IF NOT EXISTS profiles (
     id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
     username TEXT UNIQUE NOT NULL,
     full_name TEXT,
     avatar_url TEXT,
-    handicap DECIMAL(4,1),
+    banner_url TEXT,
     bio TEXT,
-    home_course_id UUID,
+    handicap DECIMAL(4,1),
+    university_id UUID REFERENCES universities(id) ON DELETE SET NULL,
+    university_email TEXT,
+    is_university_verified BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     
@@ -19,9 +36,9 @@ CREATE TABLE IF NOT EXISTS profiles (
     CONSTRAINT username_format CHECK (username ~ '^[a-zA-Z0-9_]+$')
 );
 
--- ========================================
--- GOLF COURSES TABLE
--- ========================================
+-- ================================================
+-- GOLF COURSES
+-- ================================================
 CREATE TABLE IF NOT EXISTS golf_courses (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name TEXT NOT NULL,
@@ -35,6 +52,7 @@ CREATE TABLE IF NOT EXISTS golf_courses (
     par INTEGER,
     course_rating DECIMAL(4,1),
     slope INTEGER,
+    yardage INTEGER,
     phone TEXT,
     website TEXT,
     description TEXT,
@@ -44,33 +62,92 @@ CREATE TABLE IF NOT EXISTS golf_courses (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Add foreign key for home course
-ALTER TABLE profiles 
-ADD CONSTRAINT fk_home_course 
-FOREIGN KEY (home_course_id) REFERENCES golf_courses(id) ON DELETE SET NULL;
-
--- ========================================
--- ROUNDS TABLE
--- ========================================
+-- ================================================
+-- ROUNDS
+-- ================================================
 CREATE TABLE IF NOT EXISTS rounds (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
     course_id UUID REFERENCES golf_courses(id) ON DELETE SET NULL,
     score INTEGER NOT NULL,
     date_played DATE NOT NULL DEFAULT CURRENT_DATE,
+    tee_box TEXT,
     notes TEXT,
     weather TEXT,
     photos TEXT[],
-    putts INTEGER,
+    total_putts INTEGER,
     fairways_hit INTEGER,
+    fairways_total INTEGER,
     greens_in_regulation INTEGER,
+    greens_total INTEGER,
+    penalties INTEGER,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- ========================================
--- FOLLOWS TABLE
--- ========================================
+-- ================================================
+-- HOLE SCORES
+-- ================================================
+CREATE TABLE IF NOT EXISTS hole_scores (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    round_id UUID REFERENCES rounds(id) ON DELETE CASCADE NOT NULL,
+    hole_number INTEGER NOT NULL,
+    par INTEGER NOT NULL,
+    score INTEGER NOT NULL,
+    putts INTEGER,
+    fairway_hit BOOLEAN,
+    green_in_regulation BOOLEAN,
+    penalties INTEGER DEFAULT 0,
+    club_used_off_tee TEXT,
+    notes TEXT,
+    
+    UNIQUE(round_id, hole_number)
+);
+
+-- ================================================
+-- CLUB DISTANCES
+-- ================================================
+CREATE TABLE IF NOT EXISTS club_distances (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+    club_type TEXT NOT NULL,
+    average_distance INTEGER NOT NULL,
+    max_distance INTEGER,
+    min_distance INTEGER,
+    measurement_count INTEGER DEFAULT 1,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    
+    UNIQUE(user_id, club_type)
+);
+
+-- ================================================
+-- FAVORITE COURSES
+-- ================================================
+CREATE TABLE IF NOT EXISTS favorite_courses (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+    course_id UUID REFERENCES golf_courses(id) ON DELETE CASCADE NOT NULL,
+    rank INTEGER NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    
+    UNIQUE(user_id, course_id)
+);
+
+-- ================================================
+-- COURSE PREFERENCES (for swiping)
+-- ================================================
+CREATE TABLE IF NOT EXISTS course_preferences (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+    winner_id UUID REFERENCES golf_courses(id) ON DELETE CASCADE NOT NULL,
+    loser_id UUID REFERENCES golf_courses(id) ON DELETE CASCADE NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ================================================
+-- SOCIAL: FOLLOWS
+-- ================================================
 CREATE TABLE IF NOT EXISTS follows (
     follower_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     following_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
@@ -79,9 +156,9 @@ CREATE TABLE IF NOT EXISTS follows (
     CONSTRAINT no_self_follow CHECK (follower_id != following_id)
 );
 
--- ========================================
--- LIKES TABLE
--- ========================================
+-- ================================================
+-- SOCIAL: LIKES
+-- ================================================
 CREATE TABLE IF NOT EXISTS likes (
     user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     round_id UUID REFERENCES rounds(id) ON DELETE CASCADE,
@@ -89,9 +166,9 @@ CREATE TABLE IF NOT EXISTS likes (
     PRIMARY KEY (user_id, round_id)
 );
 
--- ========================================
--- COMMENTS TABLE
--- ========================================
+-- ================================================
+-- SOCIAL: COMMENTS
+-- ================================================
 CREATE TABLE IF NOT EXISTS comments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
@@ -101,99 +178,95 @@ CREATE TABLE IF NOT EXISTS comments (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- ========================================
+-- ================================================
 -- INDEXES
--- ========================================
+-- ================================================
 CREATE INDEX IF NOT EXISTS idx_profiles_username ON profiles(username);
+CREATE INDEX IF NOT EXISTS idx_profiles_university ON profiles(university_id);
+CREATE INDEX IF NOT EXISTS idx_profiles_handicap ON profiles(handicap);
 CREATE INDEX IF NOT EXISTS idx_golf_courses_location ON golf_courses(latitude, longitude);
 CREATE INDEX IF NOT EXISTS idx_golf_courses_google_place_id ON golf_courses(google_place_id);
 CREATE INDEX IF NOT EXISTS idx_rounds_user_id ON rounds(user_id);
 CREATE INDEX IF NOT EXISTS idx_rounds_course_id ON rounds(course_id);
 CREATE INDEX IF NOT EXISTS idx_rounds_date_played ON rounds(date_played DESC);
 CREATE INDEX IF NOT EXISTS idx_rounds_created_at ON rounds(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_hole_scores_round ON hole_scores(round_id);
 CREATE INDEX IF NOT EXISTS idx_follows_follower ON follows(follower_id);
 CREATE INDEX IF NOT EXISTS idx_follows_following ON follows(following_id);
 CREATE INDEX IF NOT EXISTS idx_likes_round ON likes(round_id);
 CREATE INDEX IF NOT EXISTS idx_comments_round ON comments(round_id);
+CREATE INDEX IF NOT EXISTS idx_favorite_courses_user ON favorite_courses(user_id);
+CREATE INDEX IF NOT EXISTS idx_course_preferences_user ON course_preferences(user_id);
 
--- ========================================
+-- ================================================
 -- ROW LEVEL SECURITY
--- ========================================
+-- ================================================
+ALTER TABLE universities ENABLE ROW LEVEL SECURITY;
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE golf_courses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE rounds ENABLE ROW LEVEL SECURITY;
+ALTER TABLE hole_scores ENABLE ROW LEVEL SECURITY;
+ALTER TABLE club_distances ENABLE ROW LEVEL SECURITY;
+ALTER TABLE favorite_courses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE course_preferences ENABLE ROW LEVEL SECURITY;
 ALTER TABLE follows ENABLE ROW LEVEL SECURITY;
 ALTER TABLE likes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
 
--- Profiles policies
-CREATE POLICY "Profiles are viewable by everyone" ON profiles
-    FOR SELECT USING (true);
+-- Universities: Public read
+CREATE POLICY "Universities are public" ON universities FOR SELECT USING (true);
 
-CREATE POLICY "Users can insert their own profile" ON profiles
-    FOR INSERT WITH CHECK (auth.uid() = id);
+-- Profiles
+CREATE POLICY "Profiles are public" ON profiles FOR SELECT USING (true);
+CREATE POLICY "Users can insert own profile" ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
+CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
 
-CREATE POLICY "Users can update their own profile" ON profiles
-    FOR UPDATE USING (auth.uid() = id);
+-- Golf courses
+CREATE POLICY "Courses are public" ON golf_courses FOR SELECT USING (true);
+CREATE POLICY "Auth users can create courses" ON golf_courses FOR INSERT WITH CHECK (auth.role() = 'authenticated');
 
--- Golf courses policies
-CREATE POLICY "Golf courses are viewable by everyone" ON golf_courses
-    FOR SELECT USING (true);
+-- Rounds
+CREATE POLICY "Rounds are public" ON rounds FOR SELECT USING (true);
+CREATE POLICY "Users can create own rounds" ON rounds FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own rounds" ON rounds FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete own rounds" ON rounds FOR DELETE USING (auth.uid() = user_id);
 
-CREATE POLICY "Authenticated users can create courses" ON golf_courses
-    FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+-- Hole scores
+CREATE POLICY "Hole scores are public" ON hole_scores FOR SELECT USING (true);
+CREATE POLICY "Users can manage own hole scores" ON hole_scores FOR ALL 
+    USING (EXISTS (SELECT 1 FROM rounds WHERE rounds.id = hole_scores.round_id AND rounds.user_id = auth.uid()));
 
--- Rounds policies
-CREATE POLICY "Rounds are viewable by everyone" ON rounds
-    FOR SELECT USING (true);
+-- Club distances
+CREATE POLICY "Club distances viewable by owner" ON club_distances FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can manage own club distances" ON club_distances FOR ALL USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can create their own rounds" ON rounds
-    FOR INSERT WITH CHECK (auth.uid() = user_id);
+-- Favorite courses
+CREATE POLICY "Favorites are public" ON favorite_courses FOR SELECT USING (true);
+CREATE POLICY "Users can manage own favorites" ON favorite_courses FOR ALL USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can update their own rounds" ON rounds
-    FOR UPDATE USING (auth.uid() = user_id);
+-- Course preferences
+CREATE POLICY "Preferences viewable by owner" ON course_preferences FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can manage own preferences" ON course_preferences FOR ALL USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can delete their own rounds" ON rounds
-    FOR DELETE USING (auth.uid() = user_id);
+-- Follows
+CREATE POLICY "Follows are public" ON follows FOR SELECT USING (true);
+CREATE POLICY "Users can follow" ON follows FOR INSERT WITH CHECK (auth.uid() = follower_id);
+CREATE POLICY "Users can unfollow" ON follows FOR DELETE USING (auth.uid() = follower_id);
 
--- Follows policies
-CREATE POLICY "Follows are viewable by everyone" ON follows
-    FOR SELECT USING (true);
+-- Likes
+CREATE POLICY "Likes are public" ON likes FOR SELECT USING (true);
+CREATE POLICY "Users can like" ON likes FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can unlike" ON likes FOR DELETE USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can follow others" ON follows
-    FOR INSERT WITH CHECK (auth.uid() = follower_id);
+-- Comments
+CREATE POLICY "Comments are public" ON comments FOR SELECT USING (true);
+CREATE POLICY "Users can comment" ON comments FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own comments" ON comments FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete own comments" ON comments FOR DELETE USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can unfollow" ON follows
-    FOR DELETE USING (auth.uid() = follower_id);
-
--- Likes policies
-CREATE POLICY "Likes are viewable by everyone" ON likes
-    FOR SELECT USING (true);
-
-CREATE POLICY "Users can like rounds" ON likes
-    FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can unlike rounds" ON likes
-    FOR DELETE USING (auth.uid() = user_id);
-
--- Comments policies
-CREATE POLICY "Comments are viewable by everyone" ON comments
-    FOR SELECT USING (true);
-
-CREATE POLICY "Users can create comments" ON comments
-    FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can update their own comments" ON comments
-    FOR UPDATE USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can delete their own comments" ON comments
-    FOR DELETE USING (auth.uid() = user_id);
-
--- ========================================
--- FUNCTIONS & TRIGGERS
--- ========================================
-
--- Auto-update updated_at timestamp
+-- ================================================
+-- TRIGGERS
+-- ================================================
 CREATE OR REPLACE FUNCTION update_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -202,52 +275,24 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER update_profiles_updated_at
-    BEFORE UPDATE ON profiles
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON profiles FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER update_golf_courses_updated_at BEFORE UPDATE ON golf_courses FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER update_rounds_updated_at BEFORE UPDATE ON rounds FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER update_club_distances_updated_at BEFORE UPDATE ON club_distances FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER update_comments_updated_at BEFORE UPDATE ON comments FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
-CREATE TRIGGER update_golf_courses_updated_at
-    BEFORE UPDATE ON golf_courses
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-
-CREATE TRIGGER update_rounds_updated_at
-    BEFORE UPDATE ON rounds
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-
-CREATE TRIGGER update_comments_updated_at
-    BEFORE UPDATE ON comments
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-
--- ========================================
--- STORAGE BUCKET POLICIES
--- ========================================
-
--- Bucket: round-photos (Public)
-CREATE POLICY "Authenticated users can upload round photos"
-ON storage.objects FOR INSERT TO authenticated
-WITH CHECK (bucket_id = 'round-photos');
-
-CREATE POLICY "Round photos are public"
-ON storage.objects FOR SELECT TO public
-USING (bucket_id = 'round-photos');
-
-CREATE POLICY "Users can delete round photos"
-ON storage.objects FOR DELETE TO authenticated
-USING (bucket_id = 'round-photos');
-
--- Bucket: avatars (Public)
-CREATE POLICY "Users can upload avatar"
-ON storage.objects FOR INSERT TO authenticated
-WITH CHECK (bucket_id = 'avatars');
-
-CREATE POLICY "Avatars are public"
-ON storage.objects FOR SELECT TO public
-USING (bucket_id = 'avatars');
-
-CREATE POLICY "Users can manage their avatar"
-ON storage.objects FOR UPDATE TO authenticated
-USING (bucket_id = 'avatars');
-
-CREATE POLICY "Users can delete their avatar"
-ON storage.objects FOR DELETE TO authenticated
-USING (bucket_id = 'avatars');
+-- ================================================
+-- SEED UNIVERSITIES
+-- ================================================
+INSERT INTO universities (name, short_name, email_domain, primary_color) VALUES
+('Stanford University', 'Stanford', 'stanford.edu', '#8C1515'),
+('UC Berkeley', 'Cal', 'berkeley.edu', '#003262'),
+('UCLA', 'UCLA', 'ucla.edu', '#2774AE'),
+('USC', 'USC', 'usc.edu', '#990000'),
+('Harvard University', 'Harvard', 'harvard.edu', '#A51C30'),
+('Yale University', 'Yale', 'yale.edu', '#00356B'),
+('Princeton University', 'Princeton', 'princeton.edu', '#FF6F00'),
+('MIT', 'MIT', 'mit.edu', '#750014'),
+('Duke University', 'Duke', 'duke.edu', '#003087'),
+('UNC Chapel Hill', 'UNC', 'unc.edu', '#4B9CD3')
+ON CONFLICT (email_domain) DO NOTHING;

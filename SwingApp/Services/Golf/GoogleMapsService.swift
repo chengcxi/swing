@@ -110,18 +110,11 @@ class GoogleMapsService {
     // MARK: - Get or Create Course
     
     func getOrCreateCourse(from place: GMSPlace) async throws -> GolfCourse {
-        // Check if exists
-        if let placeId = place.placeID,
-           let existing = try await CourseService.shared.findByGooglePlaceId(placeId) {
-            return existing
-        }
-        
-        // Create new
         guard let courseInsert = convertToGolfCourseInsert(place) else {
             throw GoogleMapsError.invalidPlace
         }
         
-        return try await CourseService.shared.createCourse(courseInsert)
+        return try await CourseService.shared.getOrCreateCourse(courseInsert)
     }
     
     // MARK: - Helpers

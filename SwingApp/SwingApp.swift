@@ -1,5 +1,6 @@
 import SwiftUI
 import GoogleMaps
+import GooglePlaces
 
 @main
 struct SwingApp: App {
@@ -18,8 +19,8 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication,
                     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         
-        // Initialize Google Maps SDK
         GMSServices.provideAPIKey(Config.googleMapsAPIKey)
+        GMSPlacesClient.provideAPIKey(Config.googleMapsAPIKey)
         
         return true
     }
