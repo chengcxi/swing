@@ -285,14 +285,63 @@ CREATE TRIGGER update_comments_updated_at BEFORE UPDATE ON comments FOR EACH ROW
 -- SEED UNIVERSITIES
 -- ================================================
 INSERT INTO universities (name, short_name, email_domain, primary_color) VALUES
-('Stanford University', 'Stanford', 'stanford.edu', '#8C1515'),
+-- UCs
 ('UC Berkeley', 'Cal', 'berkeley.edu', '#003262'),
 ('UCLA', 'UCLA', 'ucla.edu', '#2774AE'),
+('UC San Diego', 'UCSD', 'ucsd.edu', '#182B49'),
+('UC Santa Barbara', 'UCSB', 'ucsb.edu', '#003660'),
+('UC Irvine', 'UCI', 'uci.edu', '#0064A4'),
+('UC Davis', 'UC Davis', 'ucdavis.edu', '#022851'),
+('UC Santa Cruz', 'UCSC', 'ucsc.edu', '#003C6C'),
+('UC Riverside', 'UCR', 'ucr.edu', '#2D6CC0'),
+('UC Merced', 'UC Merced', 'ucmerced.edu', '#002855'),
+('UC San Francisco', 'UCSF', 'ucsf.edu', '#052049'),
+
+-- CSUs
+('San Jose State', 'SJSU', 'sjsu.edu', '#0055A2'),
+('San Diego State', 'SDSU', 'sdsu.edu', '#A6192E'),
+('San Francisco State', 'SFSU', 'sfsu.edu', '#231161'),
+('Cal State Long Beach', 'CSULB', 'csulb.edu', '#ffe100ff'),
+('Cal State Fullerton', 'CSUF', 'fullerton.edu', '#00274C'),
+('Cal State Northridge', 'CSUN', 'csun.edu', '#D22030'),
+('Cal Poly SLO', 'Cal Poly', 'calpoly.edu', '#154734'),
+('Cal Poly Pomona', 'CPP', 'cpp.edu', '#1E4D2B'),
+('Sacramento State', 'Sac State', 'csus.edu', '#004E38'),
+('Fresno State', 'Fresno State', 'fresnostate.edu', '#DB0032'),
+('Cal State East Bay', 'CSUEB', 'csueastbay.edu', '#D81A21'),
+('Chico State', 'Chico', 'csuchico.edu', '#9D2235'),
+
+-- Private CA
+('Stanford University', 'Stanford', 'stanford.edu', '#8C1515'),
 ('USC', 'USC', 'usc.edu', '#990000'),
+('Caltech', 'Caltech', 'caltech.edu', '#FF6C0C'),
+('Santa Clara University', 'Santa Clara', 'scu.edu', '#862633'),
+('University of San Francisco', 'USF', 'usfca.edu', '#00543C'),
+('University of San Diego', 'USD', 'sandiego.edu', '#002865'),
+('Pepperdine University', 'Pepperdine', 'pepperdine.edu', '#00205B'),
+('Loyola Marymount University', 'LMU', 'lmu.edu', '#00447C'),
+('Chapman University', 'Chapman', 'chapman.edu', '#A50034'),
+('Claremont Colleges', 'Claremont', 'claremont.edu', '#9D2235'),
+('Pomona College', 'Pomona', 'pomona.edu', '#20438f'),
+('Claremont McKenna College', 'CMC', 'cmc.edu', '#9D2235'),
+('Harvey Mudd College', 'HMC', 'hmc.edu', '#333333'),
+('Pitzer College', 'Pitzer', 'pitzer.edu', '#F7941D'),
+('Scripps College', 'Scripps', 'scrippscollege.edu', '#2E4D41'),
+('Occidental College', 'Oxy', 'oxy.edu', '#F26522'),
+('Saint Mary''s College', 'SMC', 'stmarys-ca.edu', '#003366'),
+('University of the Pacific', 'Pacific', 'pacific.edu', '#F47920'),
+
+-- National
 ('Harvard University', 'Harvard', 'harvard.edu', '#A51C30'),
 ('Yale University', 'Yale', 'yale.edu', '#00356B'),
 ('Princeton University', 'Princeton', 'princeton.edu', '#FF6F00'),
 ('MIT', 'MIT', 'mit.edu', '#750014'),
 ('Duke University', 'Duke', 'duke.edu', '#003087'),
-('UNC Chapel Hill', 'UNC', 'unc.edu', '#4B9CD3')
+('UNC Chapel Hill', 'UNC', 'unc.edu', '#4B9CD3'),
+('Columbia University', 'Columbia', 'columbia.edu', '#B9D9EB'),
+('Cornell University', 'Cornell', 'cornell.edu', '#B31B1B'),
+('UPenn', 'UPenn', 'upenn.edu', '#990000'),
+('Brown University', 'Brown', 'brown.edu', '#4E3629'),
+('Dartmouth College', 'Dartmouth', 'dartmouth.edu', '#00693E')
+
 ON CONFLICT (email_domain) DO NOTHING;

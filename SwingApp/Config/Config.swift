@@ -6,7 +6,7 @@ enum Config {
     static let supabaseAnonKey = Secrets.supabaseAnonKey
     
     // MARK: - Google Maps
-    static let googleMapsAPIKey = "GOOGLE_MAPS_API_KEY"
+    static let googleMapsAPIKey = Secrets.googleMapsAPIKey
     
     // MARK: - App Settings
     static let defaultSearchRadiusKm: Double = 50.0
