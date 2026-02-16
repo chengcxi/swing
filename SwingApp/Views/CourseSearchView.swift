@@ -12,7 +12,7 @@ struct CourseSearchView: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack(spacing: 0) {
                 // Search Bar
                 HStack(spacing: 10) {
@@ -86,12 +86,12 @@ struct CourseSearchView: View {
                     Text("Discover")
                         .font(GolfrFonts.title())
                         .foregroundColor(GolfrColors.textPrimary)
+                        .fixedSize()
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: {}) {
-                        Image(systemName: "slider.horizontal.3")
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(GolfrColors.textPrimary)
+                    HStack(spacing: 8) {
+                        GolfrNavButton(icon: "map") {}
+                        GolfrNavButton(icon: "slider.horizontal.3") {}
                     }
                 }
             }

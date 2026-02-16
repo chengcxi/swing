@@ -35,7 +35,6 @@ struct RankingsView: View {
                 }
             }
         }
-        .padding(.vertical)
     }
 
     var rankings: [(course: String, location: String)] {

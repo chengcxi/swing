@@ -11,7 +11,7 @@ struct ProfileView: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 0) {
                     if let user = appViewModel.currentUser {
@@ -22,11 +22,11 @@ struct ProfileView: View {
 
                         // Quick stats row (Duolingo-style)
                         QuickStatsRow(user: user)
-                            .padding(.top, 16)
+                            .padding(.top, 20)
 
                         // Badges row
                         BadgesRow(badges: user.badges)
-                            .padding(.top, 12)
+                            .padding(.top, 16)
                     }
 
                     // Tab Picker
@@ -44,7 +44,7 @@ struct ProfileView: View {
                             AnalyticsView()
                         }
                     }
-                    .padding(.top, 8)
+                    .padding(.top, 16)
 
                     Spacer().frame(height: 100)
                 }
@@ -53,22 +53,15 @@ struct ProfileView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Text("Profile")
+                    Text(appViewModel.currentUser.map { "@\($0.username)" } ?? "Profile")
                         .font(GolfrFonts.title())
                         .foregroundColor(GolfrColors.textPrimary)
+                        .fixedSize()
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    HStack(spacing: 14) {
-                        Button(action: {}) {
-                            Image(systemName: "square.and.arrow.up")
-                                .font(.system(size: 16, weight: .medium))
-                                .foregroundColor(GolfrColors.textPrimary)
-                        }
-                        Button(action: {}) {
-                            Image(systemName: "gearshape")
-                                .font(.system(size: 16, weight: .medium))
-                                .foregroundColor(GolfrColors.textPrimary)
-                        }
+                    HStack(spacing: 8) {
+                        GolfrNavButton(icon: "square.and.arrow.up") {}
+                        GolfrNavButton(icon: "gearshape") {}
                     }
                 }
             }

@@ -169,6 +169,26 @@ extension View {
     }
 }
 
+// MARK: - Navigation Button (Phantom-wallet-style circular icon buttons)
+
+struct GolfrNavButton: View {
+    let icon: String
+    var action: () -> Void = {}
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: icon)
+                .font(.system(size: 15, weight: .medium))
+                .foregroundColor(GolfrColors.textPrimary)
+                .frame(width: 34, height: 34)
+                .background(
+                    Circle()
+                        .fill(GolfrColors.backgroundElevated)
+                )
+        }
+    }
+}
+
 // MARK: - Hex Color Extension
 
 extension Color {

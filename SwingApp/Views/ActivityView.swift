@@ -64,15 +64,17 @@ struct ActivityView: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: 24) {
                     // New section
                     if !unreadActivities.isEmpty {
-                        VStack(alignment: .leading, spacing: 10) {
+                        VStack(alignment: .leading, spacing: 12) {
                             Text("New")
-                                .font(GolfrFonts.callout())
+                                .font(GolfrFonts.caption())
                                 .foregroundColor(GolfrColors.textSecondary)
+                                .textCase(.uppercase)
+                                .tracking(0.5)
                                 .padding(.horizontal)
 
                             ForEach(unreadActivities) { activity in
@@ -84,10 +86,12 @@ struct ActivityView: View {
 
                     // Earlier section
                     if !readActivities.isEmpty {
-                        VStack(alignment: .leading, spacing: 10) {
+                        VStack(alignment: .leading, spacing: 12) {
                             Text("Earlier")
-                                .font(GolfrFonts.callout())
+                                .font(GolfrFonts.caption())
                                 .foregroundColor(GolfrColors.textSecondary)
+                                .textCase(.uppercase)
+                                .tracking(0.5)
                                 .padding(.horizontal)
 
                             ForEach(readActivities) { activity in
@@ -108,21 +112,16 @@ struct ActivityView: View {
                     Text("Activity")
                         .font(GolfrFonts.title())
                         .foregroundColor(GolfrColors.textPrimary)
+                        .fixedSize()
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     if !unreadActivities.isEmpty {
-                        Button(action: {
+                        GolfrNavButton(icon: "checkmark.circle") {
                             withAnimation {
                                 activities = activities.map { item in
-                                    var mutable = item
-                                    // Can't mutate let, so we rebuild
                                     return ActivityItem(type: item.type, username: item.username, message: item.message, timestamp: item.timestamp, isRead: true)
                                 }
                             }
-                        }) {
-                            Text("Read All")
-                                .font(GolfrFonts.caption())
-                                .foregroundColor(GolfrColors.primaryLight)
                         }
                     }
                 }
@@ -149,21 +148,20 @@ struct ActivityRow: View {
             }
 
             // Content
-            VStack(alignment: .leading, spacing: 3) {
-                HStack(spacing: 0) {
-                    Text(activity.username)
-                        .font(GolfrFonts.headline())
-                        .foregroundColor(GolfrColors.textPrimary)
-                    Text(" ")
-                    Text(activity.message)
-                        .font(GolfrFonts.body())
-                        .foregroundColor(GolfrColors.textSecondary)
-                }
-                .lineLimit(2)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(activity.username)
+                    .font(GolfrFonts.headline())
+                    .foregroundColor(GolfrColors.textPrimary)
+
+                Text(activity.message)
+                    .font(GolfrFonts.body())
+                    .foregroundColor(GolfrColors.textSecondary)
+                    .lineLimit(2)
 
                 Text(timeString(from: activity.timestamp))
                     .font(GolfrFonts.caption())
                     .foregroundColor(GolfrColors.textSecondary.opacity(0.7))
+                    .padding(.top, 2)
             }
 
             Spacer()
@@ -175,12 +173,12 @@ struct ActivityRow: View {
                     .frame(width: 8, height: 8)
             }
         }
-        .padding(12)
+        .padding(14)
         .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(activity.isRead ? GolfrColors.backgroundCard : GolfrColors.primary.opacity(0.04))
         )
-        .golfrCard(cornerRadius: 14)
+        .golfrCard(cornerRadius: 16)
     }
 
     func timeString(from date: Date) -> String {

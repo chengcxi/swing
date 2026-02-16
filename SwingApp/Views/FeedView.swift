@@ -5,9 +5,9 @@ struct FeedView: View {
     @State private var showWelcomeBanner = true
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView(showsIndicators: false) {
-                VStack(spacing: 16) {
+                VStack(spacing: 20) {
                     // Welcome streak banner (Duolingo-style)
                     if showWelcomeBanner {
                         WelcomeBanner(onDismiss: {
@@ -56,12 +56,12 @@ struct FeedView: View {
                     Text("golfr")
                         .font(.system(size: 26, weight: .bold, design: .rounded))
                         .foregroundColor(GolfrColors.primary)
+                        .fixedSize()
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: {}) {
-                        Image(systemName: "paperplane")
-                            .font(.system(size: 18, weight: .medium))
-                            .foregroundColor(GolfrColors.textPrimary)
+                    HStack(spacing: 8) {
+                        GolfrNavButton(icon: "magnifyingglass") {}
+                        GolfrNavButton(icon: "paperplane") {}
                     }
                 }
             }

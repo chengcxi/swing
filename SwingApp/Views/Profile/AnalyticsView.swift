@@ -106,7 +106,6 @@ struct AnalyticsView: View {
             }
             .padding(.horizontal)
         }
-        .padding(.vertical)
     }
 }
 
