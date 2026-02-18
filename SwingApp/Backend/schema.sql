@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS profiles (
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     
-    CONSTRAINT username_length CHECK (char_length(username) >= 3 AND char_length(username) <= 30),
+    CONSTRAINT username_length CHECK (char_length(username) >= 1 AND char_length(username) <= 25),
     CONSTRAINT username_format CHECK (username ~ '^[a-zA-Z0-9_]+$')
 );
 
