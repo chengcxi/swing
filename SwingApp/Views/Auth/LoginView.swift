@@ -130,15 +130,34 @@ struct LoginView: View {
                             )
                         }
 
+                        // Error message
+                        if let error = appViewModel.authError {
+                            Text(error)
+                                .font(GolfrFonts.caption())
+                                .foregroundColor(GolfrColors.error)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+
                         // Action button
                         Button(action: {
-                            appViewModel.isAuthenticated = true
+                            Task {
+                                if isSignUp {
+                                    await appViewModel.signUp(email: email, password: password)
+                                } else {
+                                    await appViewModel.signIn(email: email, password: password)
+                                }
+                            }
                         }) {
                             HStack {
-                                Text(isSignUp ? "Create Account" : "Sign In")
-                                    .font(GolfrFonts.headline())
-                                Image(systemName: "arrow.right")
-                                    .font(.system(size: 14, weight: .semibold))
+                                if appViewModel.isLoading {
+                                    ProgressView()
+                                        .tint(.white)
+                                } else {
+                                    Text(isSignUp ? "Create Account" : "Sign In")
+                                        .font(GolfrFonts.headline())
+                                    Image(systemName: "arrow.right")
+                                        .font(.system(size: 14, weight: .semibold))
+                                }
                             }
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
@@ -149,6 +168,8 @@ struct LoginView: View {
                             )
                             .shadow(color: GolfrColors.primary.opacity(0.4), radius: 8, x: 0, y: 4)
                         }
+                        .disabled(appViewModel.isLoading || email.isEmpty || password.isEmpty)
+                        .opacity(email.isEmpty || password.isEmpty ? 0.6 : 1.0)
                         .padding(.top, 4)
 
                         // Divider

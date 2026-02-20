@@ -31,6 +31,10 @@
 		A10000010000000000000022 /* Round.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000022 /* Round.swift */; };
 		A10000010000000000000023 /* APIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000023 /* APIService.swift */; };
 		A10000010000000000000024 /* Fredoka-Variable.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000024 /* Fredoka-Variable.ttf */; };
+		B23958032F47E95500CD4EDA /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = B23958022F47E95500CD4EDA /* Supabase */; };
+		B23958062F47EABF00CD4EDA /* SupabaseClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23958052F47EABE00CD4EDA /* SupabaseClient.swift */; };
+		B23958072F47EABF00CD4EDA /* Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23958042F47EABE00CD4EDA /* Secrets.swift */; };
+		B23958092F47EADB00CD4EDA /* DatabaseModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23958082F47EADB00CD4EDA /* DatabaseModels.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -58,6 +62,9 @@
 		B10000010000000000000022 /* Round.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Round.swift; sourceTree = "<group>"; };
 		B10000010000000000000023 /* APIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIService.swift; sourceTree = "<group>"; };
 		B10000010000000000000024 /* Fredoka-Variable.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Fredoka-Variable.ttf"; sourceTree = "<group>"; };
+		B23958042F47EABE00CD4EDA /* Secrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Secrets.swift; sourceTree = "<group>"; };
+		B23958052F47EABE00CD4EDA /* SupabaseClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseClient.swift; sourceTree = "<group>"; };
+		B23958082F47EADB00CD4EDA /* DatabaseModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseModels.swift; sourceTree = "<group>"; };
 		C10000010000000000000001 /* SwingApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SwingApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -66,16 +73,25 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B23958032F47E95500CD4EDA /* Supabase in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		B23958012F47E95500CD4EDA /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		E10000010000000000000001 = {
 			isa = PBXGroup;
 			children = (
 				E10000010000000000000002 /* SwingApp */,
+				B23958012F47E95500CD4EDA /* Frameworks */,
 				E10000010000000000000099 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -93,14 +109,6 @@
 				E10000010000000000000011 /* Fonts */,
 			);
 			path = SwingApp;
-			sourceTree = "<group>";
-		};
-		E10000010000000000000011 /* Fonts */ = {
-			isa = PBXGroup;
-			children = (
-				B10000010000000000000024 /* Fredoka-Variable.ttf */,
-			);
-			path = Fonts;
 			sourceTree = "<group>";
 		};
 		E10000010000000000000003 /* Theme */ = {
@@ -167,6 +175,7 @@
 		E10000010000000000000009 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				B23958082F47EADB00CD4EDA /* DatabaseModels.swift */,
 				B10000010000000000000019 /* User.swift */,
 				B10000010000000000000020 /* Post.swift */,
 				B10000010000000000000021 /* Course.swift */,
@@ -178,9 +187,19 @@
 		E10000010000000000000010 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				B23958042F47EABE00CD4EDA /* Secrets.swift */,
+				B23958052F47EABE00CD4EDA /* SupabaseClient.swift */,
 				B10000010000000000000023 /* APIService.swift */,
 			);
 			path = Services;
+			sourceTree = "<group>";
+		};
+		E10000010000000000000011 /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				B10000010000000000000024 /* Fredoka-Variable.ttf */,
+			);
+			path = Fonts;
 			sourceTree = "<group>";
 		};
 		E10000010000000000000099 /* Products */ = {
@@ -235,6 +254,9 @@
 				Base,
 			);
 			mainGroup = E10000010000000000000001;
+			packageReferences = (
+				B23958002F47E83700CD4EDA /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
 			productRefGroup = E10000010000000000000099 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -263,6 +285,8 @@
 				A10000010000000000000001 /* SwingApp.swift in Sources */,
 				A10000010000000000000002 /* ContentView.swift in Sources */,
 				A10000010000000000000003 /* GolfrTheme.swift in Sources */,
+				B23958062F47EABF00CD4EDA /* SupabaseClient.swift in Sources */,
+				B23958072F47EABF00CD4EDA /* Secrets.swift in Sources */,
 				A10000010000000000000004 /* MainTabView.swift in Sources */,
 				A10000010000000000000005 /* FeedView.swift in Sources */,
 				A10000010000000000000006 /* CourseSearchView.swift in Sources */,
@@ -272,6 +296,7 @@
 				A10000010000000000000010 /* LoginView.swift in Sources */,
 				A10000010000000000000011 /* AnalyticsView.swift in Sources */,
 				A10000010000000000000012 /* RankingsView.swift in Sources */,
+				B23958092F47EADB00CD4EDA /* DatabaseModels.swift in Sources */,
 				A10000010000000000000013 /* PostRow.swift in Sources */,
 				A10000010000000000000014 /* CourseRow.swift in Sources */,
 				A10000010000000000000015 /* StatsCard.swift in Sources */,
@@ -488,6 +513,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		B23958002F47E83700CD4EDA /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		B23958022F47E95500CD4EDA /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B23958002F47E83700CD4EDA /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = F10000010000000000000099 /* Project object */;
 }

@@ -4,6 +4,8 @@ struct ProfileView: View {
     @EnvironmentObject var appViewModel: AppViewModel
     @State private var selectedTab: ProfileTab = .rounds
     @State private var showMenu = false
+    @State private var showEditProfile = false
+    @State private var showAllRounds = false
 
     enum ProfileTab: String, CaseIterable {
         case rounds = "Rounds"
@@ -17,7 +19,9 @@ struct ProfileView: View {
                 VStack(spacing: 0) {
                     if let user = appViewModel.currentUser {
                         // Hero header (white with green accent)
-                        ProfileHeroCard(user: user)
+                        ProfileHeroCard(user: user, onEditTapped: {
+                            showEditProfile = true
+                        })
                             .padding(.horizontal)
                             .padding(.top, 2)
 
@@ -38,7 +42,9 @@ struct ProfileView: View {
                     Group {
                         switch selectedTab {
                         case .rounds:
-                            RoundsListView()
+                            RoundsListView(onSeeAllTapped: {
+                                showAllRounds = true
+                            })
                         case .rankings:
                             RankingsView()
                         case .analytics:
@@ -70,6 +76,15 @@ struct ProfileView: View {
             }
             .sheet(isPresented: $showMenu) {
                 BurgerMenuSheet()
+            }
+            .sheet(isPresented: $showEditProfile) {
+                if let user = appViewModel.currentUser {
+                    EditProfileSheet(user: user)
+                        .environmentObject(appViewModel)
+                }
+            }
+            .sheet(isPresented: $showAllRounds) {
+                AllRoundsSheet()
             }
         }
     }
@@ -128,6 +143,7 @@ struct BurgerMenuItem: View {
 
 struct ProfileHeroCard: View {
     let user: User
+    var onEditTapped: () -> Void = {}
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
@@ -239,7 +255,7 @@ struct ProfileHeroCard: View {
             .padding(20)
 
             // Edit button — top right of card
-            Button(action: {}) {
+            Button(action: onEditTapped) {
                 Image(systemName: "pencil")
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(GolfrColors.textSecondary)
@@ -444,6 +460,7 @@ struct ProfileTabPicker: View {
 
 struct RoundsListView: View {
     let rounds = Round.mocks
+    var onSeeAllTapped: () -> Void = {}
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -452,7 +469,7 @@ struct RoundsListView: View {
                     .font(GolfrFonts.headline())
                     .foregroundColor(GolfrColors.textPrimary)
                 Spacer()
-                Button(action: {}) {
+                Button(action: onSeeAllTapped) {
                     Text("See All")
                         .font(GolfrFonts.caption())
                         .foregroundColor(GolfrColors.primaryLight)
@@ -470,6 +487,8 @@ struct RoundsListView: View {
 
 struct RoundListItem: View {
     let round: Round
+    @State private var showPostConfirmation = false
+    @State private var posted = false
 
     var body: some View {
         VStack(alignment: .trailing, spacing: 0) {
@@ -521,14 +540,20 @@ struct RoundListItem: View {
             }
 
             // Post link — aligned with chevron above
-            Button(action: {}) {
+            Button(action: {
+                if posted {
+                    // Already posted
+                } else {
+                    showPostConfirmation = true
+                }
+            }) {
                 HStack(spacing: 4) {
-                    Image(systemName: "square.and.arrow.up")
+                    Image(systemName: posted ? "checkmark.circle.fill" : "square.and.arrow.up")
                         .font(.system(size: 11))
-                    Text("Post")
+                    Text(posted ? "Posted" : "Post")
                         .font(GolfrFonts.caption())
                 }
-                .foregroundColor(GolfrColors.primaryLight)
+                .foregroundColor(posted ? GolfrColors.primary : GolfrColors.primaryLight)
             }
             .padding(.top, -16)
         }
@@ -536,11 +561,176 @@ struct RoundListItem: View {
         .padding(.top, 12)
         .padding(.bottom, 12)
         .golfrCard(cornerRadius: 14)
+        .alert("Share to Feed", isPresented: $showPostConfirmation) {
+            Button("Post", role: nil) {
+                withAnimation { posted = true }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Share your \(round.score) at \(round.courseName) to your feed?")
+        }
     }
 
     func dateString(from date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMM d"
         return formatter.string(from: date)
+    }
+}
+
+// MARK: - Edit Profile Sheet (Instagram-style)
+
+struct EditProfileSheet: View {
+    @EnvironmentObject var appViewModel: AppViewModel
+    @Environment(\.dismiss) var dismiss
+    let user: User
+
+    @State private var fullName: String = ""
+    @State private var username: String = ""
+    @State private var bio: String = ""
+    @State private var university: String = ""
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                GolfrColors.backgroundPrimary.ignoresSafeArea()
+
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 24) {
+                        // Avatar
+                        ZStack {
+                            Circle()
+                                .fill(GolfrColors.primaryLight.opacity(0.1))
+                                .frame(width: 86, height: 86)
+
+                            Circle()
+                                .stroke(GolfrColors.primaryLight, lineWidth: 2)
+                                .frame(width: 86, height: 86)
+
+                            Text(fullName.prefix(1).uppercased())
+                                .font(.system(size: 36, weight: .bold, design: .rounded))
+                                .foregroundColor(GolfrColors.primary)
+                        }
+                        .overlay(alignment: .bottomTrailing) {
+                            Image(systemName: "camera.circle.fill")
+                                .font(.system(size: 26))
+                                .foregroundColor(GolfrColors.primary)
+                                .background(Circle().fill(GolfrColors.backgroundPrimary).frame(width: 24, height: 24))
+                        }
+                        .padding(.top, 12)
+
+                        // Fields
+                        VStack(spacing: 16) {
+                            EditProfileField(label: "Name", text: $fullName)
+                            EditProfileField(label: "Username", text: $username)
+                            EditProfileField(label: "Bio", text: $bio, isMultiline: true)
+                            EditProfileField(label: "University", text: $university)
+                        }
+                        .padding(.horizontal)
+                    }
+                }
+            }
+            .navigationTitle("Edit Profile")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") { dismiss() }
+                        .foregroundColor(GolfrColors.textSecondary)
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        appViewModel.updateProfile(
+                            fullName: fullName,
+                            username: username,
+                            bio: bio,
+                            university: university.isEmpty ? nil : university
+                        )
+                        dismiss()
+                    }
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(GolfrColors.primary)
+                }
+            }
+        }
+        .onAppear {
+            fullName = user.fullName
+            username = user.username
+            bio = user.bio ?? ""
+            university = user.university ?? ""
+        }
+    }
+}
+
+struct EditProfileField: View {
+    let label: String
+    @Binding var text: String
+    var isMultiline: Bool = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(label)
+                .font(GolfrFonts.caption())
+                .foregroundColor(GolfrColors.textSecondary)
+
+            if isMultiline {
+                TextEditor(text: $text)
+                    .font(GolfrFonts.body())
+                    .frame(height: 80)
+                    .padding(12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(GolfrColors.backgroundCard)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .stroke(GolfrColors.textSecondary.opacity(0.15), lineWidth: 1)
+                    )
+            } else {
+                TextField(label, text: $text)
+                    .font(GolfrFonts.body())
+                    .padding(14)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(GolfrColors.backgroundCard)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .stroke(GolfrColors.textSecondary.opacity(0.15), lineWidth: 1)
+                    )
+            }
+        }
+    }
+}
+
+// MARK: - All Rounds Sheet
+
+struct AllRoundsSheet: View {
+    @Environment(\.dismiss) var dismiss
+    let rounds = Round.mocks
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                GolfrColors.backgroundPrimary.ignoresSafeArea()
+
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 12) {
+                        ForEach(rounds) { round in
+                            RoundListItem(round: round)
+                        }
+                    }
+                    .padding(.horizontal)
+                    .padding(.top, 8)
+                }
+            }
+            .navigationTitle("All Rounds")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") { dismiss() }
+                        .foregroundColor(GolfrColors.primary)
+                }
+            }
+        }
     }
 }

@@ -1,7 +1,21 @@
 import SwiftUI
 
+struct RankingEntry: Identifiable {
+    let id = UUID()
+    var course: String
+    var location: String
+}
+
 struct RankingsView: View {
     @EnvironmentObject var appViewModel: AppViewModel
+    @State private var isEditing = false
+    @State private var rankingList: [RankingEntry] = [
+        RankingEntry(course: "Sandpiper Golf Club", location: "Goleta, CA"),
+        RankingEntry(course: "Riviera Country Club", location: "Pacific Palisades, CA"),
+        RankingEntry(course: "Alisal River Course", location: "Solvang, CA"),
+        RankingEntry(course: "Rustic Canyon Golf Course", location: "Moorpark, CA"),
+        RankingEntry(course: "La Purisima Golf Course", location: "Lompoc, CA")
+    ]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -11,40 +25,112 @@ struct RankingsView: View {
                     .font(GolfrFonts.headline())
                     .foregroundColor(GolfrColors.textPrimary)
                 Spacer()
-                Button(action: {}) {
-                    Text("Edit")
+                Button(action: {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        isEditing.toggle()
+                    }
+                }) {
+                    Text(isEditing ? "Done" : "Edit")
                         .font(GolfrFonts.caption())
                         .foregroundColor(GolfrColors.primaryLight)
                 }
             }
             .padding(.horizontal)
 
-            // Podium top 3 (Duolingo-style)
-            if rankings.count >= 3 {
-                PodiumView(rankings: Array(rankings.prefix(3)))
-                    .padding(.horizontal)
-            }
+            if isEditing {
+                // Editable reorder list
+                VStack(spacing: 8) {
+                    ForEach(Array(rankingList.enumerated()), id: \.element.id) { index, ranking in
+                        EditableRankingRow(
+                            rank: index + 1,
+                            courseName: ranking.course,
+                            location: ranking.location,
+                            onMoveUp: index > 0 ? {
+                                withAnimation { rankingList.swapAt(index, index - 1) }
+                            } : nil,
+                            onMoveDown: index < rankingList.count - 1 ? {
+                                withAnimation { rankingList.swapAt(index, index + 1) }
+                            } : nil
+                        )
+                        .padding(.horizontal)
+                    }
+                }
+            } else {
+                // Podium top 3 (Duolingo-style)
+                if rankingList.count >= 3 {
+                    PodiumView(rankings: rankingList.prefix(3).map { ($0.course, $0.location) })
+                        .padding(.horizontal)
+                }
 
-            // Remaining rankings
-            VStack(spacing: 8) {
-                ForEach(Array(rankings.enumerated()), id: \.offset) { index, ranking in
-                    if index >= 3 {
-                        RankingRow(rank: index + 1, courseName: ranking.course, location: ranking.location)
-                            .padding(.horizontal)
+                // Remaining rankings
+                VStack(spacing: 8) {
+                    ForEach(Array(rankingList.enumerated()), id: \.element.id) { index, ranking in
+                        if index >= 3 {
+                            RankingRow(rank: index + 1, courseName: ranking.course, location: ranking.location)
+                                .padding(.horizontal)
+                        }
                     }
                 }
             }
         }
     }
+}
 
-    var rankings: [(course: String, location: String)] {
-        [
-            ("Sandpiper Golf Club", "Goleta, CA"),
-            ("Riviera Country Club", "Pacific Palisades, CA"),
-            ("Alisal River Course", "Solvang, CA"),
-            ("Rustic Canyon Golf Course", "Moorpark, CA"),
-            ("La Purisima Golf Course", "Lompoc, CA")
-        ]
+// MARK: - Editable Ranking Row (Edit mode)
+
+struct EditableRankingRow: View {
+    let rank: Int
+    let courseName: String
+    let location: String
+    var onMoveUp: (() -> Void)?
+    var onMoveDown: (() -> Void)?
+
+    var body: some View {
+        HStack(spacing: 14) {
+            Text("\(rank)")
+                .font(GolfrFonts.headline())
+                .foregroundColor(GolfrColors.textSecondary)
+                .frame(width: 28)
+
+            ZStack {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(GolfrColors.primary.opacity(0.08))
+                    .frame(width: 40, height: 40)
+                Image(systemName: "mappin.and.ellipse")
+                    .font(.system(size: 14))
+                    .foregroundColor(GolfrColors.primary)
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(courseName)
+                    .font(GolfrFonts.headline())
+                    .foregroundColor(GolfrColors.textPrimary)
+                Text(location)
+                    .font(GolfrFonts.caption())
+                    .foregroundColor(GolfrColors.textSecondary)
+            }
+
+            Spacer()
+
+            // Reorder arrows
+            VStack(spacing: 4) {
+                Button(action: { onMoveUp?() }) {
+                    Image(systemName: "chevron.up")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(onMoveUp != nil ? GolfrColors.textSecondary : GolfrColors.textSecondary.opacity(0.2))
+                }
+                .disabled(onMoveUp == nil)
+
+                Button(action: { onMoveDown?() }) {
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(onMoveDown != nil ? GolfrColors.textSecondary : GolfrColors.textSecondary.opacity(0.2))
+                }
+                .disabled(onMoveDown == nil)
+            }
+        }
+        .padding(12)
+        .golfrCard(cornerRadius: 12)
     }
 }
 
