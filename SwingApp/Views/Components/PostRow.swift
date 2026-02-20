@@ -1,8 +1,5 @@
 import SwiftUI
 
-// Legacy PostRow kept as a typealias to PostCard for backwards compatibility
-// New implementation is PostCard in FeedView.swift
-
 struct PostCard: View {
     @State var post: Post
     @ObservedObject var viewModel: FeedViewModel
@@ -50,18 +47,67 @@ struct PostCard: View {
                 }
             }
 
-            // Round score card (Phantom-wallet-style dark card)
+            // Round info as clean text card
             if let round = post.round {
-                RoundScoreCard(round: round)
+                VStack(alignment: .leading, spacing: 8) {
+                    // "User shot a 80 at Course Name"
+                    (
+                        Text(post.user.fullName)
+                            .font(GolfrFonts.headline())
+                            .foregroundColor(GolfrColors.textPrimary)
+                        + Text(" shot a ")
+                            .font(GolfrFonts.body())
+                            .foregroundColor(GolfrColors.textSecondary)
+                        + Text("\(round.score)")
+                            .font(GolfrFonts.headline())
+                            .foregroundColor(GolfrColors.primary)
+                        + Text(" at ")
+                            .font(GolfrFonts.body())
+                            .foregroundColor(GolfrColors.textSecondary)
+                        + Text(round.courseName)
+                            .font(GolfrFonts.headline())
+                            .foregroundColor(GolfrColors.primaryLight)
+                    )
+
+                    HStack(spacing: 12) {
+                        HStack(spacing: 5) {
+                            Image(systemName: "mappin")
+                                .font(.system(size: 10))
+                            Text(round.location)
+                                .font(GolfrFonts.caption())
+                        }
+                        .foregroundColor(GolfrColors.textSecondary)
+
+                        HStack(spacing: 5) {
+                            Image(systemName: "flag")
+                                .font(.system(size: 10))
+                            Text("\(round.holes) holes")
+                                .font(GolfrFonts.caption())
+                        }
+                        .foregroundColor(GolfrColors.textSecondary)
+                    }
+                }
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(GolfrColors.primary.opacity(0.04))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(GolfrColors.primary.opacity(0.1), lineWidth: 1)
+                )
             }
 
             // Caption
-            Text(post.caption)
-                .font(GolfrFonts.body())
-                .foregroundColor(GolfrColors.textPrimary)
-                .lineSpacing(2)
+            if !post.caption.isEmpty {
+                Text(post.caption)
+                    .font(GolfrFonts.body())
+                    .foregroundColor(GolfrColors.textPrimary)
+                    .lineSpacing(2)
+            }
 
-            // Action bar
+            // Action bar (no repost)
             HStack(spacing: 0) {
                 ActionButton(
                     icon: post.isLiked ? "heart.fill" : "heart",
@@ -73,13 +119,6 @@ struct PostCard: View {
                 ActionButton(
                     icon: "bubble.right",
                     count: post.comments,
-                    color: GolfrColors.textSecondary,
-                    action: {}
-                )
-
-                ActionButton(
-                    icon: "arrow.2.squarepath",
-                    count: 0,
                     color: GolfrColors.textSecondary,
                     action: {}
                 )
@@ -102,68 +141,6 @@ struct PostCard: View {
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .abbreviated
         return formatter.localizedString(for: date, relativeTo: Date())
-    }
-}
-
-// MARK: - Round Score Card (Phantom-style dark card)
-
-struct RoundScoreCard: View {
-    let round: Round
-
-    var body: some View {
-        HStack(spacing: 14) {
-            // Score circle
-            ZStack {
-                Circle()
-                    .fill(GolfrColors.cream.opacity(0.15))
-                    .frame(width: 64, height: 64)
-
-                Circle()
-                    .stroke(GolfrColors.cream.opacity(0.3), lineWidth: 2)
-                    .frame(width: 64, height: 64)
-
-                VStack(spacing: 0) {
-                    Text("\(round.score)")
-                        .font(.system(size: 26, weight: .bold, design: .rounded))
-                        .foregroundColor(GolfrColors.cream)
-                    Text("score")
-                        .font(.system(size: 9, weight: .medium, design: .rounded))
-                        .foregroundColor(GolfrColors.textOnDarkMuted)
-                }
-            }
-
-            VStack(alignment: .leading, spacing: 6) {
-                Text(round.courseName)
-                    .font(GolfrFonts.headline())
-                    .foregroundColor(GolfrColors.cream)
-
-                HStack(spacing: 12) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "mappin")
-                            .font(.system(size: 10))
-                        Text(round.location)
-                            .font(GolfrFonts.caption())
-                    }
-                    .foregroundColor(GolfrColors.textOnDarkMuted)
-
-                    HStack(spacing: 4) {
-                        Image(systemName: "flag")
-                            .font(.system(size: 10))
-                        Text("\(round.holes) holes")
-                            .font(GolfrFonts.caption())
-                    }
-                    .foregroundColor(GolfrColors.textOnDarkMuted)
-                }
-            }
-
-            Spacer()
-
-            Image(systemName: "chevron.right")
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundColor(GolfrColors.textOnDarkMuted)
-        }
-        .padding(16)
-        .golfrDarkCard()
     }
 }
 

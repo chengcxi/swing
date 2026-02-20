@@ -8,14 +8,14 @@ struct ActivityItem: Identifiable {
     let username: String
     let message: String
     let timestamp: Date
-    let isRead: Bool
+    var isRead: Bool
 
     enum ActivityType {
         case like
         case comment
         case follow
         case achievement
-        case streak
+        case friendRequest
 
         var icon: String {
             switch self {
@@ -23,30 +23,30 @@ struct ActivityItem: Identifiable {
             case .comment: return "bubble.right.fill"
             case .follow: return "person.badge.plus"
             case .achievement: return "trophy.fill"
-            case .streak: return "flame.fill"
+            case .friendRequest: return "person.2.fill"
             }
         }
 
         var color: Color {
             switch self {
-            case .like: return GolfrColors.error
-            case .comment: return GolfrColors.info
+            case .like: return GolfrColors.primaryLight
+            case .comment: return GolfrColors.primaryMedium
             case .follow: return GolfrColors.primaryLight
-            case .achievement: return GolfrColors.gold
-            case .streak: return GolfrColors.warning
+            case .achievement: return GolfrColors.primary
+            case .friendRequest: return GolfrColors.primaryLight
             }
         }
     }
 
     static let mocks: [ActivityItem] = [
         .init(type: .achievement, username: "golfr", message: "You earned the \"Top 10\" badge!", timestamp: Date().addingTimeInterval(-300), isRead: false),
+        .init(type: .friendRequest, username: "sarah_k", message: "wants to be your friend", timestamp: Date().addingTimeInterval(-1200), isRead: false),
         .init(type: .like, username: "matt_g", message: "liked your round at Sandpiper Golf Club", timestamp: Date().addingTimeInterval(-1800), isRead: false),
         .init(type: .comment, username: "sarah_k", message: "commented: \"Nice round! What driver are you using?\"", timestamp: Date().addingTimeInterval(-3600), isRead: false),
+        .init(type: .friendRequest, username: "mike_j", message: "wants to be your friend", timestamp: Date().addingTimeInterval(-5400), isRead: true),
         .init(type: .follow, username: "jake_w", message: "started following you", timestamp: Date().addingTimeInterval(-7200), isRead: true),
-        .init(type: .streak, username: "golfr", message: "You're on a 3-day streak! Keep it up!", timestamp: Date().addingTimeInterval(-86400), isRead: true),
         .init(type: .like, username: "alex_t", message: "liked your round at Riviera Country Club", timestamp: Date().addingTimeInterval(-90000), isRead: true),
         .init(type: .comment, username: "tom_r", message: "commented: \"Let's play a round together!\"", timestamp: Date().addingTimeInterval(-172800), isRead: true),
-        .init(type: .follow, username: "emily_c", message: "started following you", timestamp: Date().addingTimeInterval(-259200), isRead: true),
     ]
 }
 
@@ -103,15 +103,18 @@ struct ActivityView: View {
 
                     Spacer().frame(height: 100)
                 }
-                .padding(.top, 8)
+                .padding(.top, 2)
             }
             .background(GolfrColors.backgroundPrimary.ignoresSafeArea())
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Text("Activity")
-                        .font(GolfrFonts.title())
-                        .foregroundColor(GolfrColors.textPrimary)
+                    Text("activity")
+                        .font(GolfrFonts.pageTitle())
+                        .foregroundColor(GolfrColors.primary)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 6)
+                        .background(Capsule().fill(GolfrColors.backgroundCard))
                         .fixedSize()
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -119,7 +122,9 @@ struct ActivityView: View {
                         GolfrNavButton(icon: "checkmark.circle") {
                             withAnimation {
                                 activities = activities.map { item in
-                                    return ActivityItem(type: item.type, username: item.username, message: item.message, timestamp: item.timestamp, isRead: true)
+                                    var copy = item
+                                    copy.isRead = true
+                                    return copy
                                 }
                             }
                         }
@@ -136,41 +141,67 @@ struct ActivityRow: View {
     let activity: ActivityItem
 
     var body: some View {
-        HStack(spacing: 12) {
-            // Icon
-            ZStack {
-                Circle()
-                    .fill(activity.type.color.opacity(0.12))
-                    .frame(width: 44, height: 44)
-                Image(systemName: activity.type.icon)
-                    .font(.system(size: 16))
-                    .foregroundColor(activity.type.color)
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 12) {
+                // Icon
+                ZStack {
+                    Circle()
+                        .fill(activity.type.color.opacity(0.12))
+                        .frame(width: 44, height: 44)
+                    Image(systemName: activity.type.icon)
+                        .font(.system(size: 16))
+                        .foregroundColor(activity.type.color)
+                }
+
+                // Content
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(activity.username)
+                        .font(GolfrFonts.headline())
+                        .foregroundColor(GolfrColors.textPrimary)
+
+                    Text(activity.message)
+                        .font(GolfrFonts.body())
+                        .foregroundColor(GolfrColors.textSecondary)
+                        .lineLimit(2)
+
+                    Text(timeString(from: activity.timestamp))
+                        .font(GolfrFonts.caption())
+                        .foregroundColor(GolfrColors.textSecondary.opacity(0.7))
+                        .padding(.top, 2)
+                }
+
+                Spacer()
+
+                // Unread indicator (non-friend-request only)
+                if activity.type != .friendRequest && !activity.isRead {
+                    Circle()
+                        .fill(GolfrColors.primaryLight)
+                        .frame(width: 8, height: 8)
+                }
             }
 
-            // Content
-            VStack(alignment: .leading, spacing: 4) {
-                Text(activity.username)
-                    .font(GolfrFonts.headline())
-                    .foregroundColor(GolfrColors.textPrimary)
+            // Friend request: accept/decline buttons below content
+            if activity.type == .friendRequest {
+                HStack(spacing: 8) {
+                    Button(action: {}) {
+                        Text("Accept")
+                            .font(GolfrFonts.caption())
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(Capsule().fill(GolfrColors.primaryLight))
+                    }
 
-                Text(activity.message)
-                    .font(GolfrFonts.body())
-                    .foregroundColor(GolfrColors.textSecondary)
-                    .lineLimit(2)
-
-                Text(timeString(from: activity.timestamp))
-                    .font(GolfrFonts.caption())
-                    .foregroundColor(GolfrColors.textSecondary.opacity(0.7))
-                    .padding(.top, 2)
-            }
-
-            Spacer()
-
-            // Unread indicator
-            if !activity.isRead {
-                Circle()
-                    .fill(GolfrColors.primaryLight)
-                    .frame(width: 8, height: 8)
+                    Button(action: {}) {
+                        Text("Decline")
+                            .font(GolfrFonts.caption())
+                            .foregroundColor(GolfrColors.textSecondary)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(Capsule().fill(GolfrColors.backgroundElevated))
+                    }
+                }
+                .padding(.leading, 56)
             }
         }
         .padding(14)

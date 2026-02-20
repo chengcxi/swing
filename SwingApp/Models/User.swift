@@ -12,7 +12,9 @@ struct User: Identifiable {
     var bestRound: Int
     var roundsPlayed: Int
     var badges: [Badge]
-    
+    var bio: String?
+    var friendsCount: Int
+
     static let mock = User(
         id: UUID(),
         username: "johndoe",
@@ -24,7 +26,9 @@ struct User: Identifiable {
         averageScore: 74.5,
         bestRound: 68,
         roundsPlayed: 44,
-        badges: [.verified, .top10, .star]
+        badges: [.verified, .top10, .star],
+        bio: "UCLA Golfer | Chasing scratch | Always on the course",
+        friendsCount: 2
     )
 }
 
@@ -32,5 +36,4 @@ enum Badge: String, Codable {
     case verified
     case top10
     case star
-    case streak
 }

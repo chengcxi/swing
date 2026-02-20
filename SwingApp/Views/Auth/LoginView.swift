@@ -49,7 +49,7 @@ struct LoginView: View {
                         .opacity(animatelogo ? 1.0 : 0.0)
 
                         Text("golfr")
-                            .font(.system(size: 42, weight: .bold, design: .rounded))
+                            .font(GolfrFonts.pageTitle(size: 42))
                             .foregroundColor(GolfrColors.cream)
 
                         Text("Track your game. Find your crew.")

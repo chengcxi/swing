@@ -3,11 +3,15 @@ import SwiftUI
 struct AddRoundView: View {
     @Environment(\.dismiss) var dismiss
     @State private var selectedCourse = ""
-    @State private var score = ""
     @State private var holes: Int = 18
     @State private var date = Date()
     @State private var notes = ""
     @State private var currentStep = 0
+    @State private var holeScores: [HoleScoreEntry] = []
+
+    var totalScore: Int {
+        holeScores.reduce(0) { $0 + $1.score }
+    }
 
     var body: some View {
         NavigationView {
@@ -17,7 +21,7 @@ struct AddRoundView: View {
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 24) {
                         // Progress indicator (Duolingo-style)
-                        ProgressBar(currentStep: currentStep, totalSteps: 3)
+                        ProgressBar(currentStep: currentStep, totalSteps: 4)
                             .padding(.horizontal)
                             .padding(.top, 8)
 
@@ -27,14 +31,17 @@ struct AddRoundView: View {
                             case 0:
                                 CourseSelectionStep(selectedCourse: $selectedCourse)
                             case 1:
-                                ScoreEntryStep(score: $score, holes: $holes, date: $date)
+                                HoleSetupStep(holes: $holes, date: $date, holeScores: $holeScores)
                             case 2:
+                                HoleByHoleEntryStep(holeScores: $holeScores)
+                            case 3:
                                 ReviewStep(
                                     courseName: selectedCourse.isEmpty ? "Select a course" : selectedCourse,
-                                    score: score,
+                                    score: "\(totalScore)",
                                     holes: holes,
                                     date: date,
-                                    notes: $notes
+                                    notes: $notes,
+                                    holeScores: holeScores
                                 )
                             default:
                                 EmptyView()
@@ -42,7 +49,7 @@ struct AddRoundView: View {
                         }
                         .padding(.horizontal)
 
-                        Spacer().frame(height: 40)
+                        Spacer().frame(height: 140)
                     }
                 }
 
@@ -69,7 +76,7 @@ struct AddRoundView: View {
                         }
 
                         Button(action: {
-                            if currentStep < 2 {
+                            if currentStep < 3 {
                                 withAnimation(.easeInOut(duration: 0.25)) {
                                     currentStep += 1
                                 }
@@ -79,9 +86,9 @@ struct AddRoundView: View {
                             }
                         }) {
                             HStack {
-                                Text(currentStep == 2 ? "Save Round" : "Continue")
+                                Text(currentStep == 3 ? "Save Round" : "Continue")
                                     .font(GolfrFonts.headline())
-                                if currentStep < 2 {
+                                if currentStep < 3 {
                                     Image(systemName: "arrow.right")
                                         .font(.system(size: 14, weight: .semibold))
                                 } else {
@@ -231,39 +238,26 @@ struct CourseSelectionStep: View {
     }
 }
 
-// MARK: - Step 2: Score Entry
+// MARK: - Step 2: Hole Setup
 
-struct ScoreEntryStep: View {
-    @Binding var score: String
+struct HoleSetupStep: View {
     @Binding var holes: Int
     @Binding var date: Date
+    @Binding var holeScores: [HoleScoreEntry]
+
+    let defaultPars18 = [4, 4, 3, 5, 4, 3, 4, 5, 4, 4, 3, 5, 4, 4, 3, 4, 5, 4]
+    let defaultPars9 = [4, 4, 3, 5, 4, 3, 4, 5, 4]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("How'd you play?")
+                Text("Round Setup")
                     .font(GolfrFonts.title())
                     .foregroundColor(GolfrColors.textPrimary)
-                Text("Enter your round details")
+                Text("Choose holes and date")
                     .font(GolfrFonts.body())
                     .foregroundColor(GolfrColors.textSecondary)
             }
-
-            // Score input (big prominent entry)
-            VStack(spacing: 8) {
-                Text("Total Score")
-                    .font(GolfrFonts.caption())
-                    .foregroundColor(GolfrColors.textSecondary)
-
-                TextField("72", text: $score)
-                    .font(.system(size: 56, weight: .bold, design: .rounded))
-                    .foregroundColor(GolfrColors.primary)
-                    .multilineTextAlignment(.center)
-                    .keyboardType(.numberPad)
-                    .frame(maxWidth: .infinity)
-            }
-            .padding(24)
-            .golfrCard(cornerRadius: 20)
 
             // Holes toggle
             VStack(alignment: .leading, spacing: 10) {
@@ -274,9 +268,11 @@ struct ScoreEntryStep: View {
                 HStack(spacing: 8) {
                     HoleOptionButton(value: 9, selected: holes == 9) {
                         holes = 9
+                        initializeHoleScores()
                     }
                     HoleOptionButton(value: 18, selected: holes == 18) {
                         holes = 18
+                        initializeHoleScores()
                     }
                 }
             }
@@ -292,6 +288,18 @@ struct ScoreEntryStep: View {
                     .labelsHidden()
                     .tint(GolfrColors.primary)
             }
+        }
+        .onAppear {
+            if holeScores.isEmpty {
+                initializeHoleScores()
+            }
+        }
+    }
+
+    func initializeHoleScores() {
+        let pars = holes == 9 ? defaultPars9 : defaultPars18
+        holeScores = pars.enumerated().map { index, par in
+            HoleScoreEntry(holeNumber: index + 1, par: par, score: par)
         }
     }
 }
@@ -320,7 +328,116 @@ struct HoleOptionButton: View {
     }
 }
 
-// MARK: - Step 3: Review
+// MARK: - Step 3: Hole-by-Hole Entry
+
+struct HoleByHoleEntryStep: View {
+    @Binding var holeScores: [HoleScoreEntry]
+
+    var totalScore: Int {
+        holeScores.reduce(0) { $0 + $1.score }
+    }
+
+    var totalPar: Int {
+        holeScores.reduce(0) { $0 + $1.par }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Enter Your Scores")
+                    .font(GolfrFonts.title())
+                    .foregroundColor(GolfrColors.textPrimary)
+                Text("Tap +/\u{2212} to adjust each hole")
+                    .font(GolfrFonts.body())
+                    .foregroundColor(GolfrColors.textSecondary)
+            }
+
+            // Running total banner
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Total")
+                        .font(GolfrFonts.caption())
+                        .foregroundColor(GolfrColors.textOnDarkMuted)
+                    Text("\(totalScore)")
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .foregroundColor(GolfrColors.cream)
+                }
+                Spacer()
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text("To Par")
+                        .font(GolfrFonts.caption())
+                        .foregroundColor(GolfrColors.textOnDarkMuted)
+                    let diff = totalScore - totalPar
+                    Text(diff > 0 ? "+\(diff)" : diff == 0 ? "E" : "\(diff)")
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .foregroundColor(diff <= 0 ? GolfrColors.success : GolfrColors.cream)
+                }
+            }
+            .padding(16)
+            .golfrDarkCard()
+
+            // Hole-by-hole grid
+            LazyVGrid(columns: [
+                GridItem(.flexible()),
+                GridItem(.flexible()),
+                GridItem(.flexible())
+            ], spacing: 10) {
+                ForEach($holeScores) { $hole in
+                    HoleScoreEntryCard(hole: $hole)
+                }
+            }
+        }
+    }
+}
+
+struct HoleScoreEntryCard: View {
+    @Binding var hole: HoleScoreEntry
+
+    var scoreToPar: Int { hole.score - hole.par }
+
+    var scoreColor: Color { GolfrColors.textPrimary }
+
+    var body: some View {
+        VStack(spacing: 6) {
+            HStack {
+                Text("H\(hole.holeNumber)")
+                    .font(GolfrFonts.caption())
+                    .foregroundColor(GolfrColors.textSecondary)
+                Spacer()
+                Text("P\(hole.par)")
+                    .font(GolfrFonts.caption())
+                    .foregroundColor(GolfrColors.textSecondary)
+            }
+
+            HStack(spacing: 10) {
+                Button(action: {
+                    if hole.score > 1 { hole.score -= 1 }
+                }) {
+                    Image(systemName: "minus.circle.fill")
+                        .font(.system(size: 20))
+                        .foregroundColor(GolfrColors.textSecondary)
+                }
+
+                Text("\(hole.score)")
+                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .foregroundColor(scoreColor)
+                    .frame(minWidth: 28)
+
+                Button(action: {
+                    hole.score += 1
+                }) {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 20))
+                        .foregroundColor(GolfrColors.primaryLight)
+                }
+            }
+        }
+        .padding(10)
+        .golfrCard(cornerRadius: 12)
+    }
+}
+
+// MARK: - Step 4: Review
 
 struct ReviewStep: View {
     let courseName: String
@@ -328,6 +445,7 @@ struct ReviewStep: View {
     let holes: Int
     let date: Date
     @Binding var notes: String
+    var holeScores: [HoleScoreEntry] = []
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
@@ -366,7 +484,7 @@ struct ReviewStep: View {
                         .stroke(GolfrColors.cream.opacity(0.3), lineWidth: 3)
                         .frame(width: 100, height: 100)
                     VStack(spacing: 0) {
-                        Text(score.isEmpty ? "--" : score)
+                        Text(score == "0" ? "--" : score)
                             .font(.system(size: 40, weight: .bold, design: .rounded))
                             .foregroundColor(GolfrColors.cream)
                         Text("score")
@@ -377,6 +495,34 @@ struct ReviewStep: View {
             }
             .padding(20)
             .golfrDarkCard()
+
+            // Hole breakdown (compact)
+            if !holeScores.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Hole Breakdown")
+                        .font(GolfrFonts.callout())
+                        .foregroundColor(GolfrColors.textSecondary)
+
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 9), spacing: 6) {
+                        ForEach(holeScores) { hole in
+                            VStack(spacing: 2) {
+                                Text("\(hole.holeNumber)")
+                                    .font(.system(size: 9, weight: .medium, design: .rounded))
+                                    .foregroundColor(GolfrColors.textSecondary)
+                                Text("\(hole.score)")
+                                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                                    .foregroundColor(GolfrColors.textPrimary)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 6)
+                            .background(
+                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                    .fill(GolfrColors.backgroundElevated)
+                            )
+                        }
+                    }
+                }
+            }
 
             // Notes
             VStack(alignment: .leading, spacing: 8) {

@@ -3,6 +3,7 @@ import SwiftUI
 struct ProfileView: View {
     @EnvironmentObject var appViewModel: AppViewModel
     @State private var selectedTab: ProfileTab = .rounds
+    @State private var showMenu = false
 
     enum ProfileTab: String, CaseIterable {
         case rounds = "Rounds"
@@ -15,12 +16,12 @@ struct ProfileView: View {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 0) {
                     if let user = appViewModel.currentUser {
-                        // Hero header (Phantom-wallet style)
+                        // Hero header (white with green accent)
                         ProfileHeroCard(user: user)
                             .padding(.horizontal)
-                            .padding(.top, 4)
+                            .padding(.top, 2)
 
-                        // Quick stats row (Duolingo-style)
+                        // Quick stats banner
                         QuickStatsRow(user: user)
                             .padding(.top, 20)
 
@@ -54,196 +55,290 @@ struct ProfileView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Text(appViewModel.currentUser.map { "@\($0.username)" } ?? "Profile")
-                        .font(GolfrFonts.title())
-                        .foregroundColor(GolfrColors.textPrimary)
+                        .font(GolfrFonts.pageTitle())
+                        .foregroundColor(GolfrColors.primary)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 6)
+                        .background(Capsule().fill(GolfrColors.backgroundCard))
                         .fixedSize()
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    HStack(spacing: 8) {
-                        GolfrNavButton(icon: "square.and.arrow.up") {}
-                        GolfrNavButton(icon: "gearshape") {}
+                    GolfrNavButton(icon: "line.3.horizontal") {
+                        showMenu = true
                     }
+                }
+            }
+            .sheet(isPresented: $showMenu) {
+                BurgerMenuSheet()
+            }
+        }
+    }
+}
+
+// MARK: - Burger Menu Sheet
+
+struct BurgerMenuSheet: View {
+    @Environment(\.dismiss) var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List {
+                BurgerMenuItem(icon: "bookmark", title: "Saved Posts")
+                BurgerMenuItem(icon: "heart", title: "Liked Posts")
+                BurgerMenuItem(icon: "bell", title: "Notifications")
+                BurgerMenuItem(icon: "link", title: "Invite Friends")
+            }
+            .listStyle(.insetGrouped)
+            .navigationTitle("Menu")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") { dismiss() }
+                        .foregroundColor(GolfrColors.primaryLight)
                 }
             }
         }
     }
 }
 
-// MARK: - Profile Hero Card (Phantom-wallet-style)
+struct BurgerMenuItem: View {
+    let icon: String
+    let title: String
+
+    var body: some View {
+        Button(action: {}) {
+            HStack(spacing: 14) {
+                Image(systemName: icon)
+                    .font(.system(size: 16))
+                    .foregroundColor(GolfrColors.primaryLight)
+                    .frame(width: 28)
+                Text(title)
+                    .font(GolfrFonts.body())
+                    .foregroundColor(GolfrColors.textPrimary)
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12))
+                    .foregroundColor(GolfrColors.textSecondary)
+            }
+        }
+    }
+}
+
+// MARK: - Profile Hero Card (White with green accent)
 
 struct ProfileHeroCard: View {
     let user: User
 
     var body: some View {
-        VStack(spacing: 16) {
-            // Avatar + Name
-            HStack(spacing: 14) {
-                ZStack {
-                    Circle()
-                        .fill(GolfrColors.cream.opacity(0.2))
-                        .frame(width: 68, height: 68)
+        ZStack(alignment: .topTrailing) {
+            VStack(alignment: .leading, spacing: 16) {
+                // Avatar + Name
+                HStack(spacing: 14) {
+                    ZStack {
+                        Circle()
+                            .fill(GolfrColors.primaryLight.opacity(0.1))
+                            .frame(width: 68, height: 68)
 
-                    Circle()
-                        .stroke(GolfrColors.cream.opacity(0.4), lineWidth: 2)
-                        .frame(width: 68, height: 68)
+                        Circle()
+                            .stroke(GolfrColors.primaryLight, lineWidth: 2)
+                            .frame(width: 68, height: 68)
 
-                    Text(user.fullName.prefix(1).uppercased())
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
-                        .foregroundColor(GolfrColors.cream)
-                }
+                        Text(user.fullName.prefix(1).uppercased())
+                            .font(.system(size: 28, weight: .bold, design: .rounded))
+                            .foregroundColor(GolfrColors.primary)
+                    }
 
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 6) {
-                        Text(user.fullName)
-                            .font(GolfrFonts.title())
-                            .foregroundColor(.white)
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(spacing: 6) {
+                            Text(user.fullName)
+                                .font(GolfrFonts.title())
+                                .foregroundColor(GolfrColors.textPrimary)
 
-                        if user.isVerified {
-                            Image(systemName: "checkmark.seal.fill")
-                                .font(.system(size: 16))
-                                .foregroundColor(GolfrColors.gold)
+                            if user.isVerified {
+                                Image(systemName: "checkmark.seal.fill")
+                                    .font(.system(size: 16))
+                                    .foregroundColor(GolfrColors.primaryLight)
+                            }
+                        }
+
+                        Text("@\(user.username)")
+                            .font(GolfrFonts.callout())
+                            .foregroundColor(GolfrColors.textSecondary)
+
+                        if let uni = user.university {
+                            HStack(spacing: 4) {
+                                Image(systemName: "building.columns")
+                                    .font(.system(size: 10))
+                                Text(uni)
+                                    .font(GolfrFonts.caption())
+                            }
+                            .foregroundColor(GolfrColors.textSecondary)
                         }
                     }
 
-                    Text("@\(user.username)")
-                        .font(GolfrFonts.callout())
-                        .foregroundColor(GolfrColors.textOnDarkMuted)
+                    Spacer()
+                }
 
-                    if let uni = user.university {
-                        HStack(spacing: 4) {
-                            Image(systemName: "building.columns")
-                                .font(.system(size: 10))
-                            Text(uni)
-                                .font(GolfrFonts.caption())
-                        }
-                        .foregroundColor(GolfrColors.textOnDarkMuted)
+                // Bio
+                if let bio = user.bio {
+                    Text(bio)
+                        .font(GolfrFonts.body())
+                        .foregroundColor(GolfrColors.textPrimary.opacity(0.7))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
+                // Friends & Rounds counts
+                HStack(spacing: 20) {
+                    HStack(spacing: 4) {
+                        Text("\(user.friendsCount)")
+                            .font(.system(size: 15, weight: .bold, design: .rounded))
+                            .foregroundColor(GolfrColors.textPrimary)
+                        Text("friends")
+                            .font(.system(size: 15, weight: .regular, design: .rounded))
+                            .foregroundColor(GolfrColors.textSecondary)
+                    }
+
+                    HStack(spacing: 4) {
+                        Text("\(user.roundsPlayed)")
+                            .font(.system(size: 15, weight: .bold, design: .rounded))
+                            .foregroundColor(GolfrColors.textPrimary)
+                        Text("rounds")
+                            .font(.system(size: 15, weight: .regular, design: .rounded))
+                            .foregroundColor(GolfrColors.textSecondary)
                     }
                 }
 
-                Spacer()
-            }
+                // Handicap display
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Handicap Index")
+                            .font(GolfrFonts.caption())
+                            .foregroundColor(GolfrColors.textSecondary)
+                        Text(String(format: "%.1f", user.handicap))
+                            .font(.system(size: 36, weight: .bold, design: .rounded))
+                            .foregroundColor(GolfrColors.primary)
+                    }
 
-            // Handicap display (like a wallet balance)
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Handicap Index")
-                        .font(GolfrFonts.caption())
-                        .foregroundColor(GolfrColors.textOnDarkMuted)
-                    Text(String(format: "%.1f", user.handicap))
-                        .font(.system(size: 36, weight: .bold, design: .rounded))
-                        .foregroundColor(GolfrColors.cream)
-                }
+                    Spacer()
 
-                Spacer()
-
-                // Trend indicator
-                HStack(spacing: 4) {
-                    Image(systemName: "arrow.down.right")
-                        .font(.system(size: 12, weight: .semibold))
-                    Text("-0.3")
-                        .font(GolfrFonts.callout())
-                }
-                .foregroundColor(GolfrColors.success)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
-                .background(
-                    Capsule().fill(GolfrColors.success.opacity(0.15))
-                )
-            }
-
-            // Edit profile button
-            Button(action: {}) {
-                Text("Edit Profile")
-                    .font(GolfrFonts.callout())
-                    .foregroundColor(GolfrColors.cream)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
+                    // Trend indicator
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.down.right")
+                            .font(.system(size: 12, weight: .semibold))
+                        Text("-0.3")
+                            .font(GolfrFonts.callout())
+                    }
+                    .foregroundColor(GolfrColors.success)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
                     .background(
-                        Capsule()
-                            .fill(Color.white.opacity(0.12))
+                        Capsule().fill(GolfrColors.success.opacity(0.15))
                     )
-                    .overlay(
-                        Capsule()
-                            .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                    )
+                }
             }
+            .padding(20)
+
+            // Edit button — top right of card
+            Button(action: {}) {
+                Image(systemName: "pencil")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(GolfrColors.textSecondary)
+                    .padding(8)
+                    .background(Circle().fill(GolfrColors.backgroundElevated))
+            }
+            .padding(14)
         }
-        .padding(20)
-        .golfrDarkCard()
+        .golfrCard(cornerRadius: 20)
+        .overlay(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .stroke(GolfrColors.primaryLight.opacity(0.15), lineWidth: 1)
+        )
     }
 }
 
-// MARK: - Quick Stats Row
+// MARK: - Quick Stats Row (Banner style)
 
 struct QuickStatsRow: View {
     let user: User
 
     var body: some View {
-        HStack(spacing: 10) {
-            QuickStatItem(
+        HStack(spacing: 12) {
+            StatBanner(
                 icon: "trophy.fill",
-                iconColor: GolfrColors.gold,
                 value: "\(user.bestRound)",
                 label: "Best"
             )
 
-            QuickStatItem(
+            StatBanner(
                 icon: "chart.line.uptrend.xyaxis",
-                iconColor: GolfrColors.primaryLight,
                 value: String(format: "%.0f", user.averageScore),
                 label: "Average"
             )
 
-            QuickStatItem(
+            StatBanner(
                 icon: "calendar",
-                iconColor: GolfrColors.info,
                 value: "\(user.roundsPlayed)",
                 label: "Rounds"
-            )
-
-            QuickStatItem(
-                icon: "flame.fill",
-                iconColor: GolfrColors.warning,
-                value: "3",
-                label: "Streak"
             )
         }
         .padding(.horizontal)
     }
 }
 
-struct QuickStatItem: View {
+// MARK: - Banner Shape
+
+struct BannerShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        let cr: CGFloat = 14
+        let notch: CGFloat = 18
+
+        path.move(to: CGPoint(x: rect.minX + cr, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.maxX - cr, y: rect.minY))
+        path.addArc(center: CGPoint(x: rect.maxX - cr, y: rect.minY + cr),
+                     radius: cr, startAngle: .degrees(-90), endAngle: .degrees(0), clockwise: false)
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - notch))
+        path.addLine(to: CGPoint(x: rect.midX, y: rect.maxY))
+        path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY - notch))
+        path.addLine(to: CGPoint(x: rect.minX, y: rect.minY + cr))
+        path.addArc(center: CGPoint(x: rect.minX + cr, y: rect.minY + cr),
+                     radius: cr, startAngle: .degrees(180), endAngle: .degrees(270), clockwise: false)
+
+        return path
+    }
+}
+
+struct StatBanner: View {
     let icon: String
-    let iconColor: Color
     let value: String
     let label: String
 
     var body: some View {
-        VStack(spacing: 8) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(iconColor.opacity(0.1))
-                    .frame(width: 40, height: 40)
-                Image(systemName: icon)
-                    .font(.system(size: 16))
-                    .foregroundColor(iconColor)
-            }
-
+        VStack(spacing: 6) {
             Text(value)
-                .font(GolfrFonts.title3())
-                .foregroundColor(GolfrColors.textPrimary)
+                .font(.system(size: 28, weight: .bold, design: .rounded))
+                .foregroundColor(.white)
 
             Text(label)
-                .font(.system(size: 10, weight: .medium, design: .rounded))
-                .foregroundColor(GolfrColors.textSecondary)
+                .font(.system(size: 11, weight: .medium, design: .rounded))
+                .foregroundColor(GolfrColors.textOnDarkMuted)
+
+            Image(systemName: icon)
+                .font(.system(size: 14))
+                .foregroundColor(.white.opacity(0.7))
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
-        .golfrCard(cornerRadius: 14)
+        .padding(.top, 18)
+        .padding(.bottom, 22)
+        .background(
+            BannerShape()
+                .fill(GolfrColors.cardGradient)
+        )
+        .shadow(color: GolfrColors.primary.opacity(0.25), radius: 8, x: 0, y: 4)
     }
 }
 
-// MARK: - Badges Row (Duolingo-style)
+// MARK: - Badges Row
 
 struct BadgesRow: View {
     let badges: [Badge]
@@ -261,14 +356,13 @@ struct BadgesRow: View {
 }
 
 extension Badge: CaseIterable {
-    static var allCases: [Badge] = [.verified, .top10, .star, .streak]
+    static var allCases: [Badge] = [.verified, .top10, .star]
 
     var displayName: String {
         switch self {
         case .verified: return "Verified"
         case .top10: return "Top 10"
         case .star: return "All-Star"
-        case .streak: return "On Fire"
         }
     }
 
@@ -277,16 +371,14 @@ extension Badge: CaseIterable {
         case .verified: return "checkmark.seal.fill"
         case .top10: return "medal.fill"
         case .star: return "star.fill"
-        case .streak: return "flame.fill"
         }
     }
 
     var badgeColor: Color {
         switch self {
-        case .verified: return GolfrColors.info
-        case .top10: return GolfrColors.gold
-        case .star: return GolfrColors.warning
-        case .streak: return GolfrColors.error
+        case .verified: return GolfrColors.primaryLight
+        case .top10: return GolfrColors.primaryMedium
+        case .star: return GolfrColors.primary
         }
     }
 }
@@ -348,7 +440,7 @@ struct ProfileTabPicker: View {
     }
 }
 
-// MARK: - Rounds List View (redesigned)
+// MARK: - Rounds List View
 
 struct RoundsListView: View {
     let rounds = Round.mocks
@@ -380,50 +472,69 @@ struct RoundListItem: View {
     let round: Round
 
     var body: some View {
-        HStack(spacing: 14) {
-            // Score badge
-            ZStack {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(GolfrColors.primary.opacity(0.1))
-                    .frame(width: 56, height: 56)
-
+        VStack(alignment: .trailing, spacing: 0) {
+            HStack(alignment: .top, spacing: 14) {
+                // Score badge — fixed size, pinned to top
                 Text("\(round.score)")
                     .font(.system(size: 22, weight: .bold, design: .rounded))
                     .foregroundColor(GolfrColors.primary)
-            }
+                    .frame(width: 56, height: 56)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(GolfrColors.primary.opacity(0.1))
+                    )
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(round.courseName)
-                    .font(GolfrFonts.headline())
-                    .foregroundColor(GolfrColors.textPrimary)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(round.courseName)
+                        .font(GolfrFonts.headline())
+                        .foregroundColor(GolfrColors.textPrimary)
 
-                HStack(spacing: 8) {
-                    HStack(spacing: 3) {
+                    Text("\(round.holes) holes")
+                        .font(.system(size: 10, weight: .medium, design: .rounded))
+                        .foregroundColor(GolfrColors.primary)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 3)
+                        .background(Capsule().fill(GolfrColors.primary.opacity(0.12)))
+                        .fixedSize()
+
+                    HStack(spacing: 5) {
                         Image(systemName: "mappin")
                             .font(.system(size: 9))
                         Text(round.location)
                             .font(GolfrFonts.caption())
+                            .lineLimit(1)
                     }
                     .foregroundColor(GolfrColors.textSecondary)
+                }
 
-                    Text("\(round.holes) holes")
-                        .golfrChip(color: GolfrColors.primary)
+                Spacer()
+
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text(dateString(from: round.date))
+                        .font(GolfrFonts.caption())
+                        .foregroundColor(GolfrColors.textSecondary)
+
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundColor(GolfrColors.textSecondary.opacity(0.5))
                 }
             }
 
-            Spacer()
-
-            VStack(alignment: .trailing, spacing: 2) {
-                Text(dateString(from: round.date))
-                    .font(GolfrFonts.caption())
-                    .foregroundColor(GolfrColors.textSecondary)
-
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundColor(GolfrColors.textSecondary.opacity(0.5))
+            // Post link — aligned with chevron above
+            Button(action: {}) {
+                HStack(spacing: 4) {
+                    Image(systemName: "square.and.arrow.up")
+                        .font(.system(size: 11))
+                    Text("Post")
+                        .font(GolfrFonts.caption())
+                }
+                .foregroundColor(GolfrColors.primaryLight)
             }
+            .padding(.top, -16)
         }
-        .padding(12)
+        .padding(.horizontal, 12)
+        .padding(.top, 12)
+        .padding(.bottom, 12)
         .golfrCard(cornerRadius: 14)
     }
 

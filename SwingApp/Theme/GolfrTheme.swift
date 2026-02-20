@@ -89,6 +89,14 @@ struct GolfrFonts {
     }
 }
 
+// MARK: - Page Title Font (System rounded bold)
+
+extension GolfrFonts {
+    static func pageTitle(size: CGFloat = 22) -> Font {
+        .system(size: size, weight: .bold, design: .rounded)
+    }
+}
+
 // MARK: - View Modifiers
 
 struct GolfrCardModifier: ViewModifier {
@@ -140,8 +148,8 @@ struct GolfrChipModifier: ViewModifier {
         content
             .font(GolfrFonts.caption())
             .foregroundColor(color)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
             .background(
                 Capsule()
                     .fill(color.opacity(0.12))

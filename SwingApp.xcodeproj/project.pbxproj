@@ -7,33 +7,33 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		A10000010000000000000001 /* SwingApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000001; };
-		A10000010000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000002; };
-		A10000010000000000000003 /* GolfrTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000003; };
-		A10000010000000000000004 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000004; };
-		A10000010000000000000005 /* FeedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000005; };
-		A10000010000000000000006 /* CourseSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000006; };
-		A10000010000000000000007 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000007; };
-		A10000010000000000000008 /* ActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000008; };
-		A10000010000000000000009 /* AddRoundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000009; };
-		A10000010000000000000010 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000010; };
-		A10000010000000000000011 /* AnalyticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000011; };
-		A10000010000000000000012 /* RankingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000012; };
-		A10000010000000000000013 /* PostRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000013; };
-		A10000010000000000000014 /* CourseRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000014; };
-		A10000010000000000000015 /* StatsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000015; };
-		A10000010000000000000016 /* AppViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000016; };
-		A10000010000000000000017 /* FeedViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000017; };
-		A10000010000000000000018 /* CourseViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000018; };
-		A10000010000000000000019 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000019; };
-		A10000010000000000000020 /* Post.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000020; };
-		A10000010000000000000021 /* Course.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000021; };
-		A10000010000000000000022 /* Round.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000022; };
-		A10000010000000000000023 /* APIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000023; };
+		A10000010000000000000001 /* SwingApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000001 /* SwingApp.swift */; };
+		A10000010000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000002 /* ContentView.swift */; };
+		A10000010000000000000003 /* GolfrTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000003 /* GolfrTheme.swift */; };
+		A10000010000000000000004 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000004 /* MainTabView.swift */; };
+		A10000010000000000000005 /* FeedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000005 /* FeedView.swift */; };
+		A10000010000000000000006 /* CourseSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000006 /* CourseSearchView.swift */; };
+		A10000010000000000000007 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000007 /* ProfileView.swift */; };
+		A10000010000000000000008 /* ActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000008 /* ActivityView.swift */; };
+		A10000010000000000000009 /* AddRoundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000009 /* AddRoundView.swift */; };
+		A10000010000000000000010 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000010 /* LoginView.swift */; };
+		A10000010000000000000011 /* AnalyticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000011 /* AnalyticsView.swift */; };
+		A10000010000000000000012 /* RankingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000012 /* RankingsView.swift */; };
+		A10000010000000000000013 /* PostRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000013 /* PostRow.swift */; };
+		A10000010000000000000014 /* CourseRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000014 /* CourseRow.swift */; };
+		A10000010000000000000015 /* StatsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000015 /* StatsCard.swift */; };
+		A10000010000000000000016 /* AppViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000016 /* AppViewModel.swift */; };
+		A10000010000000000000017 /* FeedViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000017 /* FeedViewModel.swift */; };
+		A10000010000000000000018 /* CourseViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000018 /* CourseViewModel.swift */; };
+		A10000010000000000000019 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000019 /* User.swift */; };
+		A10000010000000000000020 /* Post.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000020 /* Post.swift */; };
+		A10000010000000000000021 /* Course.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000021 /* Course.swift */; };
+		A10000010000000000000022 /* Round.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000022 /* Round.swift */; };
+		A10000010000000000000023 /* APIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000023 /* APIService.swift */; };
+		A10000010000000000000024 /* Fredoka-Variable.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B10000010000000000000024 /* Fredoka-Variable.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		C10000010000000000000001 /* SwingApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SwingApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B10000010000000000000001 /* SwingApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwingApp.swift; sourceTree = "<group>"; };
 		B10000010000000000000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		B10000010000000000000003 /* GolfrTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GolfrTheme.swift; sourceTree = "<group>"; };
@@ -57,6 +57,8 @@
 		B10000010000000000000021 /* Course.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Course.swift; sourceTree = "<group>"; };
 		B10000010000000000000022 /* Round.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Round.swift; sourceTree = "<group>"; };
 		B10000010000000000000023 /* APIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIService.swift; sourceTree = "<group>"; };
+		B10000010000000000000024 /* Fredoka-Variable.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Fredoka-Variable.ttf"; sourceTree = "<group>"; };
+		C10000010000000000000001 /* SwingApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SwingApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -78,14 +80,6 @@
 			);
 			sourceTree = "<group>";
 		};
-		E10000010000000000000099 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				C10000010000000000000001 /* SwingApp.app */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
 		E10000010000000000000002 /* SwingApp */ = {
 			isa = PBXGroup;
 			children = (
@@ -96,8 +90,17 @@
 				E10000010000000000000008 /* ViewModels */,
 				E10000010000000000000009 /* Models */,
 				E10000010000000000000010 /* Services */,
+				E10000010000000000000011 /* Fonts */,
 			);
 			path = SwingApp;
+			sourceTree = "<group>";
+		};
+		E10000010000000000000011 /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				B10000010000000000000024 /* Fredoka-Variable.ttf */,
+			);
+			path = Fonts;
 			sourceTree = "<group>";
 		};
 		E10000010000000000000003 /* Theme */ = {
@@ -180,6 +183,14 @@
 			path = Services;
 			sourceTree = "<group>";
 		};
+		E10000010000000000000099 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				C10000010000000000000001 /* SwingApp.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -238,6 +249,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A10000010000000000000024 /* Fredoka-Variable.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -403,9 +415,10 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = TZ5U47S57L;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIAppFonts = "Fredoka-Variable.ttf";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -431,9 +444,10 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = TZ5U47S57L;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIAppFonts = "Fredoka-Variable.ttf";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -474,7 +488,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
 	};
 	rootObject = F10000010000000000000099 /* Project object */;
 }
