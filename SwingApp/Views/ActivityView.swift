@@ -14,7 +14,6 @@ struct ActivityItem: Identifiable {
         case like
         case comment
         case follow
-        case achievement
         case friendRequest
 
         var icon: String {
@@ -22,7 +21,6 @@ struct ActivityItem: Identifiable {
             case .like: return "heart.fill"
             case .comment: return "bubble.right.fill"
             case .follow: return "person.badge.plus"
-            case .achievement: return "trophy.fill"
             case .friendRequest: return "person.2.fill"
             }
         }
@@ -32,14 +30,12 @@ struct ActivityItem: Identifiable {
             case .like: return GolfrColors.primaryLight
             case .comment: return GolfrColors.primaryMedium
             case .follow: return GolfrColors.primaryLight
-            case .achievement: return GolfrColors.primary
             case .friendRequest: return GolfrColors.primaryLight
             }
         }
     }
 
     static let mocks: [ActivityItem] = [
-        .init(type: .achievement, username: "golfr", message: "You earned the \"Top 10\" badge!", timestamp: Date().addingTimeInterval(-300), isRead: false),
         .init(type: .friendRequest, username: "sarah_k", message: "wants to be your friend", timestamp: Date().addingTimeInterval(-1200), isRead: false),
         .init(type: .like, username: "matt_g", message: "liked your round at Sandpiper Golf Club", timestamp: Date().addingTimeInterval(-1800), isRead: false),
         .init(type: .comment, username: "sarah_k", message: "commented: \"Nice round! What driver are you using?\"", timestamp: Date().addingTimeInterval(-3600), isRead: false),
@@ -108,7 +104,7 @@ struct ActivityView: View {
             .background(GolfrColors.backgroundPrimary.ignoresSafeArea())
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .principal) {
                     Text("activity")
                         .font(GolfrFonts.pageTitle())
                         .foregroundColor(GolfrColors.primary)
