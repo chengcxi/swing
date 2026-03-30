@@ -10,7 +10,7 @@ enum Tab: Int, CaseIterable {
     var icon: String {
         switch self {
         case .feed: return "house.fill"
-        case .discover: return "safari"
+        case .discover: return "magnifyingglass"
         case .addRound: return "plus"
         case .activity: return "bell.fill"
         case .profile: return "person.fill"
@@ -86,7 +86,7 @@ struct CustomTabBar: View {
                                 .font(.system(size: 24, weight: .semibold))
                                 .foregroundColor(.white)
                         }
-                        .offset(y: -16)
+                        .offset(y: 0)
                     }
                     .frame(maxWidth: .infinity)
                 } else {
@@ -95,16 +95,10 @@ struct CustomTabBar: View {
                             selectedTab = tab
                         }
                     }) {
-                        VStack(spacing: 4) {
-                            Image(systemName: tab.icon)
-                                .font(.system(size: 20, weight: selectedTab == tab ? .semibold : .regular))
-                                .foregroundColor(selectedTab == tab ? GolfrColors.primary : GolfrColors.textSecondary.opacity(0.6))
-                                .scaleEffect(selectedTab == tab ? 1.1 : 1.0)
-
-                            Text(tab.label)
-                                .font(.system(size: 10, weight: .medium, design: .rounded))
-                                .foregroundColor(selectedTab == tab ? GolfrColors.primary : GolfrColors.textSecondary.opacity(0.6))
-                        }
+                        Image(systemName: tab.icon)
+                            .font(.system(size: 22, weight: selectedTab == tab ? .semibold : .regular))
+                            .foregroundColor(selectedTab == tab ? GolfrColors.primary : GolfrColors.textSecondary.opacity(0.6))
+                            .scaleEffect(selectedTab == tab ? 1.1 : 1.0)
                         .frame(maxWidth: .infinity)
                         .padding(.top, 10)
                     }
@@ -112,7 +106,7 @@ struct CustomTabBar: View {
             }
         }
         .padding(.horizontal, 8)
-        .padding(.bottom, 20)
+        .padding(.bottom, 10)
         .background(
             TabBarBackground()
         )
@@ -124,7 +118,7 @@ struct CustomTabBar: View {
 struct TabBarBackground: View {
     var body: some View {
         RoundedRectangle(cornerRadius: 24, style: .continuous)
-            .fill(.ultraThinMaterial)
+            .fill(.regularMaterial)
             .overlay(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
                     .stroke(Color.white.opacity(0.5), lineWidth: 0.5)

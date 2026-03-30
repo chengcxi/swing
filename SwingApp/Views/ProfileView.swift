@@ -29,9 +29,6 @@ struct ProfileView: View {
                         QuickStatsRow(user: user)
                             .padding(.top, 20)
 
-                        // Badges row
-                        BadgesRow(badges: user.badges)
-                            .padding(.top, 16)
                     }
 
                     // Tab Picker
@@ -59,7 +56,7 @@ struct ProfileView: View {
             .background(GolfrColors.backgroundPrimary.ignoresSafeArea())
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .principal) {
                     Text(appViewModel.currentUser.map { "@\($0.username)" } ?? "Profile")
                         .font(GolfrFonts.pageTitle())
                         .foregroundColor(GolfrColors.primary)
@@ -171,7 +168,7 @@ struct ProfileHeroCard: View {
                                 .foregroundColor(GolfrColors.textPrimary)
 
                             if user.isVerified {
-                                Image(systemName: "checkmark.seal.fill")
+                                Image(systemName: "checkmark.circle.fill")
                                     .font(.system(size: 16))
                                     .foregroundColor(GolfrColors.primaryLight)
                             }
@@ -344,81 +341,13 @@ struct StatBanner: View {
                 .foregroundColor(.white.opacity(0.7))
         }
         .frame(maxWidth: .infinity)
-        .padding(.top, 18)
-        .padding(.bottom, 22)
+        .padding(.top, 24)
+        .padding(.bottom, 30)
         .background(
             BannerShape()
                 .fill(GolfrColors.cardGradient)
         )
         .shadow(color: GolfrColors.primary.opacity(0.25), radius: 8, x: 0, y: 4)
-    }
-}
-
-// MARK: - Badges Row
-
-struct BadgesRow: View {
-    let badges: [Badge]
-
-    var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 10) {
-                ForEach(Badge.allCases, id: \.self) { badge in
-                    BadgeItem(badge: badge, isEarned: badges.contains(badge))
-                }
-            }
-            .padding(.horizontal)
-        }
-    }
-}
-
-extension Badge: CaseIterable {
-    static var allCases: [Badge] = [.verified, .top10, .star]
-
-    var displayName: String {
-        switch self {
-        case .verified: return "Verified"
-        case .top10: return "Top 10"
-        case .star: return "All-Star"
-        }
-    }
-
-    var icon: String {
-        switch self {
-        case .verified: return "checkmark.seal.fill"
-        case .top10: return "medal.fill"
-        case .star: return "star.fill"
-        }
-    }
-
-    var badgeColor: Color {
-        switch self {
-        case .verified: return GolfrColors.primaryLight
-        case .top10: return GolfrColors.primaryMedium
-        case .star: return GolfrColors.primary
-        }
-    }
-}
-
-struct BadgeItem: View {
-    let badge: Badge
-    let isEarned: Bool
-
-    var body: some View {
-        VStack(spacing: 6) {
-            ZStack {
-                Circle()
-                    .fill(isEarned ? badge.badgeColor.opacity(0.15) : Color.gray.opacity(0.08))
-                    .frame(width: 48, height: 48)
-
-                Image(systemName: badge.icon)
-                    .font(.system(size: 20))
-                    .foregroundColor(isEarned ? badge.badgeColor : Color.gray.opacity(0.3))
-            }
-
-            Text(badge.displayName)
-                .font(.system(size: 9, weight: .medium, design: .rounded))
-                .foregroundColor(isEarned ? GolfrColors.textPrimary : GolfrColors.textSecondary)
-        }
     }
 }
 

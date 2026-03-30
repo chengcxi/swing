@@ -24,21 +24,19 @@ struct PostCard: View {
                             .font(GolfrFonts.headline())
                             .foregroundColor(GolfrColors.textPrimary)
                         if post.user.isVerified {
-                            Image(systemName: "checkmark.seal.fill")
+                            Image(systemName: "checkmark.circle.fill")
                                 .font(.system(size: 12))
-                                .foregroundColor(GolfrColors.primaryLight)
+                                .foregroundColor(GolfrColors.primary)
+                        }
+                        Button(action: {}) {
+                            Image(systemName: "star")
+                                .font(.system(size: 12))
+                                .foregroundColor(GolfrColors.textSecondary)
                         }
                     }
-                    Text("@\(post.user.username)")
-                        .font(GolfrFonts.caption())
-                        .foregroundColor(GolfrColors.textSecondary)
                 }
 
                 Spacer()
-
-                Text(timeString(from: post.timestamp))
-                    .font(GolfrFonts.caption())
-                    .foregroundColor(GolfrColors.textSecondary)
 
                 Button(action: {}) {
                     Image(systemName: "ellipsis")
@@ -50,9 +48,9 @@ struct PostCard: View {
             // Round info as clean text card
             if let round = post.round {
                 VStack(alignment: .leading, spacing: 8) {
-                    // "User shot a 80 at Course Name"
+                    // "@username shot a 80 at Course Name"
                     (
-                        Text(post.user.fullName)
+                        Text("@\(post.user.username)")
                             .font(GolfrFonts.headline())
                             .foregroundColor(GolfrColors.textPrimary)
                         + Text(" shot a ")
@@ -69,34 +67,11 @@ struct PostCard: View {
                             .foregroundColor(GolfrColors.primaryLight)
                     )
 
-                    HStack(spacing: 12) {
-                        HStack(spacing: 5) {
-                            Image(systemName: "mappin")
-                                .font(.system(size: 10))
-                            Text(round.location)
-                                .font(GolfrFonts.caption())
-                        }
+                    Text(round.location)
+                        .font(GolfrFonts.caption())
                         .foregroundColor(GolfrColors.textSecondary)
-
-                        HStack(spacing: 5) {
-                            Image(systemName: "flag")
-                                .font(.system(size: 10))
-                            Text("\(round.holes) holes")
-                                .font(GolfrFonts.caption())
-                        }
-                        .foregroundColor(GolfrColors.textSecondary)
-                    }
                 }
-                .padding(12)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(GolfrColors.primary.opacity(0.04))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .stroke(GolfrColors.primary.opacity(0.1), lineWidth: 1)
-                )
             }
 
             // Caption
@@ -107,7 +82,12 @@ struct PostCard: View {
                     .lineSpacing(2)
             }
 
-            // Action bar (no repost)
+            // Divider
+            Rectangle()
+                .fill(GolfrColors.textSecondary.opacity(0.15))
+                .frame(height: 0.5)
+
+            // Action bar
             HStack(spacing: 0) {
                 ActionButton(
                     icon: post.isLiked ? "heart.fill" : "heart",
@@ -117,7 +97,7 @@ struct PostCard: View {
                 )
 
                 ActionButton(
-                    icon: "bubble.right",
+                    icon: "message",
                     count: post.comments,
                     color: GolfrColors.textSecondary,
                     action: {}
@@ -125,13 +105,10 @@ struct PostCard: View {
 
                 Spacer()
 
-                Button(action: {}) {
-                    Image(systemName: "bookmark")
-                        .font(.system(size: 16))
-                        .foregroundColor(GolfrColors.textSecondary)
-                }
+                Text(timeString(from: post.timestamp))
+                    .font(GolfrFonts.caption())
+                    .foregroundColor(GolfrColors.textSecondary)
             }
-            .padding(.top, 4)
         }
         .padding(16)
         .golfrCard(cornerRadius: 20)

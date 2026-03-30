@@ -9,9 +9,17 @@ class AppViewModel: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var authError: String?
 
+    // Set to true to bypass Supabase auth and use mock data for UI development
+    private let devMode = true
+
     private var authListener: Task<Void, Never>?
 
     init() {
+        if devMode {
+            currentUser = User.mock
+            isAuthenticated = true
+            return
+        }
         // Check for existing session
         Task {
             await checkSession()

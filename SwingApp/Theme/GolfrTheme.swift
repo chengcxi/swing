@@ -8,8 +8,8 @@ struct GolfrColors {
     // Primary greens (from logo)
     static let primaryDark = Color(hex: "0A3D2E")      // Deepest green — nav bars, headers
     static let primary = Color(hex: "0A4A35")           // Core brand green
-    static let primaryMedium = Color(hex: "137A52")     // Mid-green for accents
-    static let primaryLight = Color(hex: "1A9E6B")      // Bright green for CTAs, active states
+    static let primaryMedium = Color(hex: "0A4A35")     // Unified golfr green
+    static let primaryLight = Color(hex: "0A4A35")      // Unified golfr green
 
     // Cream / warm neutrals (from logo text)
     static let cream = Color(hex: "F5F0E8")             // Warm off-white

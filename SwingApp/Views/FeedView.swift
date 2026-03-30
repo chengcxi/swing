@@ -23,7 +23,7 @@ struct FeedView: View {
             .background(GolfrColors.backgroundPrimary.ignoresSafeArea())
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .principal) {
                     Text("golfr")
                         .font(GolfrFonts.pageTitle(size: 26))
                         .foregroundColor(GolfrColors.primary)
@@ -31,6 +31,22 @@ struct FeedView: View {
                         .padding(.vertical, 6)
                         .background(Capsule().fill(GolfrColors.backgroundCard))
                         .fixedSize()
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: {}) {
+                        Image(systemName: "person.badge.plus")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(GolfrColors.primary)
+                            .frame(width: 34, height: 34)
+                            .background(
+                                Circle()
+                                    .fill(GolfrColors.backgroundCard)
+                            )
+                            .overlay(
+                                Circle()
+                                    .stroke(GolfrColors.primary, lineWidth: 1.5)
+                            )
+                    }
                 }
             }
         }

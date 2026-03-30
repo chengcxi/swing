@@ -3,8 +3,6 @@ import SwiftUI
 struct CourseSearchView: View {
     @StateObject private var viewModel = CourseViewModel()
     @State private var selectedFilter: CourseFilter = .all
-    @State private var showFindFriends = true
-
     enum CourseFilter: String, CaseIterable {
         case all = "All"
         case nearby = "Nearby"
@@ -12,57 +10,17 @@ struct CourseSearchView: View {
         case practiced = "Practiced"
     }
 
-    var friendSuggestions: [FriendSuggestion] {
-        [
-            FriendSuggestion(username: "matt_g", fullName: "Matt Garcia", handicap: 5.2),
-            FriendSuggestion(username: "sarah_k", fullName: "Sarah Kim", handicap: 12.4),
-            FriendSuggestion(username: "jake_w", fullName: "Jake Wilson", handicap: 8.1),
-            FriendSuggestion(username: "emily_c", fullName: "Emily Chen", handicap: 15.0),
-        ]
-    }
-
     var body: some View {
         NavigationStack {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 0) {
-                    // Find Friends section
-                    if showFindFriends {
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack {
-                                Text("Find Friends")
-                                    .font(GolfrFonts.headline())
-                                    .foregroundColor(GolfrColors.textPrimary)
-                                Spacer()
-                                Button(action: {
-                                    withAnimation { showFindFriends = false }
-                                }) {
-                                    Text("Hide")
-                                        .font(GolfrFonts.caption())
-                                        .foregroundColor(GolfrColors.textSecondary)
-                                }
-                            }
-                            .padding(.horizontal)
-
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 12) {
-                                    ForEach(friendSuggestions, id: \.username) { friend in
-                                        FriendSuggestionCard(friend: friend)
-                                    }
-                                }
-                                .padding(.horizontal)
-                            }
-                        }
-                        .padding(.top, 2)
-                        .padding(.bottom, 12)
-                    }
-
                     // Search Bar
                     HStack(spacing: 10) {
                         Image(systemName: "magnifyingglass")
                             .font(.system(size: 16, weight: .medium))
                             .foregroundColor(GolfrColors.textSecondary)
 
-                        TextField("Search courses, cities...", text: $viewModel.searchText)
+                        TextField("Search courses, cities & friends", text: $viewModel.searchText)
                             .font(GolfrFonts.body())
 
                         if !viewModel.searchText.isEmpty {
@@ -122,7 +80,7 @@ struct CourseSearchView: View {
             .background(GolfrColors.backgroundPrimary.ignoresSafeArea())
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .principal) {
                     Text("discover")
                         .font(GolfrFonts.pageTitle())
                         .foregroundColor(GolfrColors.primary)
@@ -139,60 +97,6 @@ struct CourseSearchView: View {
                 }
             }
         }
-    }
-}
-
-// MARK: - Friend Suggestion
-
-struct FriendSuggestion {
-    let username: String
-    let fullName: String
-    let handicap: Double
-}
-
-struct FriendSuggestionCard: View {
-    let friend: FriendSuggestion
-    @State private var requestSent = false
-
-    var body: some View {
-        VStack(spacing: 10) {
-            // Avatar
-            ZStack {
-                Circle()
-                    .fill(GolfrColors.primaryMedium.opacity(0.12))
-                    .frame(width: 56, height: 56)
-                Text(friend.fullName.prefix(1).uppercased())
-                    .font(.system(size: 22, weight: .bold, design: .rounded))
-                    .foregroundColor(GolfrColors.primaryMedium)
-            }
-
-            VStack(spacing: 2) {
-                Text(friend.fullName)
-                    .font(GolfrFonts.callout())
-                    .foregroundColor(GolfrColors.textPrimary)
-                    .lineLimit(1)
-                Text("HCP \(String(format: "%.1f", friend.handicap))")
-                    .font(GolfrFonts.caption())
-                    .foregroundColor(GolfrColors.textSecondary)
-            }
-
-            Button(action: {
-                withAnimation { requestSent = true }
-            }) {
-                Text(requestSent ? "Requested" : "Add Friend")
-                    .font(GolfrFonts.caption())
-                    .foregroundColor(requestSent ? GolfrColors.textSecondary : .white)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 7)
-                    .background(
-                        Capsule().fill(requestSent ? GolfrColors.backgroundElevated : GolfrColors.primaryLight)
-                    )
-            }
-            .disabled(requestSent)
-        }
-        .frame(width: 110)
-        .padding(.vertical, 14)
-        .golfrCard(cornerRadius: 16)
     }
 }
 
