@@ -13,7 +13,11 @@ export class CreatePostComponent {
   private postService = inject(PostService);
 
   postContent = signal('');
+  imageAttached = signal(false);
+  videoAttached = signal(false);
   textarea = viewChild<ElementRef<HTMLTextAreaElement>>('textarea');
+  fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
+  videoInput = viewChild<ElementRef<HTMLInputElement>>('videoInput');
   
   onInput(event: Event) {
     this.postContent.set((event.target as HTMLTextAreaElement).value);
@@ -23,6 +27,28 @@ export class CreatePostComponent {
     if (this.postContent().trim()) {
       this.postService.addPost(this.postContent());
       this.close.emit();
+    }
+  }
+
+  attachImage() {
+    this.fileInput()?.nativeElement.click();
+  }
+
+  onImageSelected(event: Event) {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (file) {
+      this.imageAttached.set(true);
+    }
+  }
+
+  attachVideo() {
+    this.videoInput()?.nativeElement.click();
+  }
+
+  onVideoSelected(event: Event) {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (file) {
+      this.videoAttached.set(true);
     }
   }
 

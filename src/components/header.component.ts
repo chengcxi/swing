@@ -9,4 +9,5 @@ export class HeaderComponent {
   activeScreen = input.required<string>();
   menuToggled = output<void>();
   messagesClicked = output<void>();
+  addFriendsClicked = output<void>();
 }
