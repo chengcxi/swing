@@ -62,5 +62,9 @@ fastlane/screenshots/**/*.png
 fastlane/test_output
 node_modules
 
+# Angular build artifacts
+.angular/
+dist/
+
 # Secrets (API keys)
 **/Secrets.swift
