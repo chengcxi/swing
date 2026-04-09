@@ -1,73 +1,97 @@
 import { Injectable, signal } from '@angular/core';
+import { supabase } from './supabase';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   isAuthenticated = signal<boolean>(false);
+  currentUserId = signal<string | null>(null);
+  authError = signal<string | null>(null);
 
   constructor() {
-    this.checkAutoLogin();
+    this.initSession();
   }
 
-  // Simulates checking localStorage on startup
-  private checkAutoLogin() {
+  private async initSession() {
     try {
-      const rememberMe = localStorage.getItem('rememberMe');
-      const deviceSignature = localStorage.getItem('deviceSignature');
-      // In a real app, you'd verify the token and signature against a server
-      if (rememberMe === 'true' && deviceSignature === navigator.userAgent) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
         this.isAuthenticated.set(true);
+        this.currentUserId.set(session.user.id);
       }
-    } catch (e) {
-      console.error('Could not access localStorage', e);
-    }
-  }
-  
-  // Simulates login
-  async login(identifier: string, password: string, rememberMe: boolean): Promise<boolean> {
-    // Mock API call
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Simple validation for mock
-    if (identifier && password) {
-      this.isAuthenticated.set(true);
-      if (rememberMe) {
-        try {
-          localStorage.setItem('rememberMe', 'true');
-          // Simple device signature mock
-          localStorage.setItem('deviceSignature', navigator.userAgent); 
-        } catch (e) {
-          console.error('Could not access localStorage', e);
+
+      // Listen for auth state changes
+      supabase.auth.onAuthStateChange((_event, session) => {
+        if (session?.user) {
+          this.isAuthenticated.set(true);
+          this.currentUserId.set(session.user.id);
+        } else {
+          this.isAuthenticated.set(false);
+          this.currentUserId.set(null);
         }
-      } else {
-        localStorage.removeItem('rememberMe');
-        localStorage.removeItem('deviceSignature');
-      }
-      return true;
+      });
+    } catch (e) {
+      console.error('Failed to init session', e);
     }
-    return false;
-  }
-  
-  // Simulates signup
-  async signup(identifier: string, username: string, password: string): Promise<boolean> {
-    // Mock API call
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Simple validation for mock
-    if (identifier && username && password) {
-      this.isAuthenticated.set(true);
-      // No "remember me" on signup, user can choose it on next login
-      return true;
-    }
-    return false;
   }
 
-  logout() {
+  async login(email: string, password: string, _rememberMe: boolean): Promise<boolean> {
+    this.authError.set(null);
     try {
-      localStorage.removeItem('rememberMe');
-      localStorage.removeItem('deviceSignature');
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) {
+        this.authError.set(error.message);
+        return false;
+      }
+      if (data.user) {
+        this.isAuthenticated.set(true);
+        this.currentUserId.set(data.user.id);
+        return true;
+      }
+      return false;
     } catch (e) {
-      console.error('Could not access localStorage', e);
+      this.authError.set('An unexpected error occurred.');
+      return false;
     }
+  }
+
+  async signup(email: string, username: string, password: string): Promise<boolean> {
+    this.authError.set(null);
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { username },
+        },
+      });
+      if (error) {
+        this.authError.set(error.message);
+        return false;
+      }
+      if (data.user) {
+        // Create profile row for the new user
+        await supabase.from('profiles').upsert({
+          id: data.user.id,
+          username,
+          full_name: username,
+        });
+        this.isAuthenticated.set(true);
+        this.currentUserId.set(data.user.id);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      this.authError.set('An unexpected error occurred.');
+      return false;
+    }
+  }
+
+  async logout() {
+    await supabase.auth.signOut();
     this.isAuthenticated.set(false);
+    this.currentUserId.set(null);
   }
 }

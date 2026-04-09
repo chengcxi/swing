@@ -16,7 +16,7 @@ import { AuthService } from './services/auth.service';
 import { GolfCourse } from './models/golf.model';
 import { CourseDetailsComponent } from './components/course-details.component';
 
-type Screen = 'feed' | 'profile' | 'search' | 'notifications' | 'messages' | 'university';
+type Screen = 'feed' | 'profile' | 'search' | 'notifications' | 'messages' | 'university' | 'support' | 'admin';
 
 @Component({
   selector: 'app-root',
@@ -59,6 +59,15 @@ export class AppComponent {
     } else if (action === 'university') {
       this.selectedCourse.set(null);
       this.activeScreen.set('university');
+    } else if (action === 'notifications') {
+      this.selectedCourse.set(null);
+      this.activeScreen.set('notifications');
+    } else if (action === 'support') {
+      this.selectedCourse.set(null);
+      this.activeScreen.set('support');
+    } else if (action === 'admin') {
+      this.selectedCourse.set(null);
+      this.activeScreen.set('admin');
     }
   }
 

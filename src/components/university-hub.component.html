@@ -98,8 +98,34 @@
                 </div>
               </div>
             </div>
-            <button class="px-3 py-1 text-xs font-semibold border border-gray-300 rounded-full hover:bg-gray-50">View</button>
+            <button (click)="viewPeer(peer)" class="px-3 py-1 text-xs font-semibold border border-gray-300 rounded-full hover:bg-gray-50">
+              {{ selectedPeer()?.id === peer.id ? 'Hide' : 'View' }}
+            </button>
           </div>
+          @if (selectedPeer()?.id === peer.id) {
+            <div class="bg-gray-50 rounded-lg p-4 mt-1 border border-gray-200">
+              <div class="flex items-center space-x-3 mb-3">
+                <img [src]="peer.avatar" [alt]="peer.name" class="w-14 h-14 rounded-full">
+                <div>
+                  <p class="font-bold text-gray-800">{{ peer.name }}</p>
+                  <p class="text-xs text-gray-500">@{{ peer.username }}</p>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-2 text-center text-sm">
+                <div class="bg-white rounded-lg p-2">
+                  <p class="text-xs text-gray-500">Handicap</p>
+                  <p class="font-bold text-[#1A4D2E]">{{ peer.handicap ?? 'N/A' }}</p>
+                </div>
+                <div class="bg-white rounded-lg p-2">
+                  <p class="text-xs text-gray-500">University</p>
+                  <p class="font-bold text-[#1A4D2E] text-xs">{{ peer.university }}</p>
+                </div>
+              </div>
+              @if (peer.description) {
+                <p class="text-sm text-gray-600 mt-2">{{ peer.description }}</p>
+              }
+            </div>
+          }
         } @empty {
           <p class="text-gray-500 text-center py-4">No other members found yet.</p>
         }

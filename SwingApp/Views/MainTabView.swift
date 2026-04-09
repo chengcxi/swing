@@ -71,42 +71,48 @@ struct CustomTabBar: View {
     var onAddTapped: () -> Void
 
     var body: some View {
-        HStack(spacing: 0) {
-            ForEach(Tab.allCases, id: \.rawValue) { tab in
-                if tab == .addRound {
-                    // Center floating button
-                    Button(action: onAddTapped) {
-                        ZStack {
-                            Circle()
-                                .fill(GolfrColors.heroGradient)
-                                .frame(width: 56, height: 56)
-                                .shadow(color: GolfrColors.primary.opacity(0.4), radius: 8, x: 0, y: 4)
+        VStack(spacing: 0) {
+            // Top separator line
+            Rectangle()
+                .fill(Color.white.opacity(0.08))
+                .frame(height: 0.5)
 
-                            Image(systemName: "plus")
-                                .font(.system(size: 24, weight: .semibold))
-                                .foregroundColor(.white)
+            HStack(spacing: 0) {
+                ForEach(Tab.allCases, id: \.rawValue) { tab in
+                    if tab == .addRound {
+                        Button(action: onAddTapped) {
+                            ZStack {
+                                Circle()
+                                    .fill(GolfrColors.heroGradient)
+                                    .frame(width: 48, height: 48)
+                                    .shadow(color: GolfrColors.primary.opacity(0.3), radius: 8, x: 0, y: 3)
+
+                                Image(systemName: "plus")
+                                    .font(.system(size: 22, weight: .bold))
+                                    .foregroundColor(.white)
+                            }
                         }
-                        .offset(y: 0)
-                    }
-                    .frame(maxWidth: .infinity)
-                } else {
-                    Button(action: {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            selectedTab = tab
-                        }
-                    }) {
-                        Image(systemName: tab.icon)
-                            .font(.system(size: 22, weight: selectedTab == tab ? .semibold : .regular))
-                            .foregroundColor(selectedTab == tab ? GolfrColors.primary : GolfrColors.textSecondary.opacity(0.6))
-                            .scaleEffect(selectedTab == tab ? 1.1 : 1.0)
                         .frame(maxWidth: .infinity)
-                        .padding(.top, 10)
+                        .frame(height: 52)
+                    } else {
+                        Button(action: {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                selectedTab = tab
+                            }
+                        }) {
+                            Image(systemName: tab.icon)
+                                .font(.system(size: 22, weight: selectedTab == tab ? .semibold : .regular))
+                                .foregroundColor(selectedTab == tab ? GolfrColors.primary : GolfrColors.textSecondary.opacity(0.45))
+                                .scaleEffect(selectedTab == tab ? 1.15 : 1.0)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 52)
+                                .contentShape(Rectangle())
+                        }
                     }
                 }
             }
+            .padding(.horizontal, 12)
         }
-        .padding(.horizontal, 8)
-        .padding(.bottom, 10)
         .background(
             TabBarBackground()
         )
@@ -117,13 +123,9 @@ struct CustomTabBar: View {
 
 struct TabBarBackground: View {
     var body: some View {
-        RoundedRectangle(cornerRadius: 24, style: .continuous)
-            .fill(.regularMaterial)
-            .overlay(
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .stroke(Color.white.opacity(0.5), lineWidth: 0.5)
-            )
-            .shadow(color: Color.black.opacity(0.08), radius: 16, x: 0, y: -4)
-            .padding(.horizontal, 12)
+        Rectangle()
+            .fill(.ultraThinMaterial)
+            .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: -2)
+            .ignoresSafeArea(.all, edges: .bottom)
     }
 }

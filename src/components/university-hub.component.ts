@@ -11,7 +11,7 @@ import { UserService } from '../services/user.service';
 })
 export class UniversityHubComponent {
   private userService = inject(UserService);
-  
+
   currentUser = this.userService.getCurrentUser();
   leaderboard = this.userService.getUniversityLeaderboard();
   userRank = this.userService.getUserRank();
@@ -20,15 +20,20 @@ export class UniversityHubComponent {
   eduEmail = signal('');
   error = signal('');
   success = signal(false);
+  selectedPeer = signal<any>(null);
 
-  connect() {
+  viewPeer(peer: any) {
+    this.selectedPeer.set(this.selectedPeer()?.id === peer.id ? null : peer);
+  }
+
+  async connect() {
     this.error.set('');
     if (!this.eduEmail()) {
       this.error.set('Please enter an email address.');
       return;
     }
-    
-    const success = this.userService.connectToUniversity(this.eduEmail());
+
+    const success = await this.userService.connectToUniversity(this.eduEmail());
     if (success) {
       this.success.set(true);
     } else {
