@@ -73,6 +73,7 @@ struct ProfileView: View {
             }
             .sheet(isPresented: $showMenu) {
                 BurgerMenuSheet()
+                    .environmentObject(appViewModel)
             }
             .sheet(isPresented: $showEditProfile) {
                 if let user = appViewModel.currentUser {
@@ -91,6 +92,7 @@ struct ProfileView: View {
 
 struct BurgerMenuSheet: View {
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var appViewModel: AppViewModel
 
     var body: some View {
         NavigationStack {
@@ -99,6 +101,23 @@ struct BurgerMenuSheet: View {
                 BurgerMenuItem(icon: "heart", title: "Liked Posts")
                 BurgerMenuItem(icon: "bell", title: "Notifications")
                 BurgerMenuItem(icon: "link", title: "Invite Friends")
+                
+                Button(action: {
+                    Task {
+                        await appViewModel.signOut()
+                        dismiss()
+                    }
+                }) {
+                    HStack(spacing: 14) {
+                        Image(systemName: "arrow.turn.up.left")
+                            .font(.system(size: 16))
+                            .foregroundColor(GolfrColors.error)
+                            .frame(width: 28)
+                        Text("Sign Out")
+                            .font(GolfrFonts.body())
+                            .foregroundColor(GolfrColors.error)
+                    }
+                }
             }
             .listStyle(.insetGrouped)
             .navigationTitle("Menu")

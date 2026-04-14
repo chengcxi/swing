@@ -10,7 +10,7 @@ class AppViewModel: ObservableObject {
     @Published var authError: String?
 
     // Set to true to bypass Supabase auth and use mock data for UI development
-    private let devMode = true
+    private let devMode = false
 
     private var authListener: Task<Void, Never>?
 
