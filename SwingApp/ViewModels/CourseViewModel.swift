@@ -6,6 +6,7 @@ class CourseViewModel: ObservableObject {
     @Published var courses: [Course] = []
     @Published var searchText: String = ""
     @Published var filteredCourses: [Course] = []
+    @Published var filteredUsers: [User] = []
     
     @Published var isLoading = false
     private var cancellables = Set<AnyCancellable>()
@@ -48,17 +49,48 @@ class CourseViewModel: ObservableObject {
     private func performSearch(query: String) async {
         if query.isEmpty {
             self.filteredCourses = self.courses
+            self.filteredUsers = []
             return
         }
         
         isLoading = true
+        async let _fetchedCourses = GooglePlacesService.shared.searchGolfCourses(query: query)
+        
+        let limitQuery = "%\(query)%"
+        async let _fetchedProfiles: [DBProfile] = (try? await supabase.from("profiles")
+            .select()
+            .or("username.ilike.\(limitQuery),full_name.ilike.\(limitQuery)")
+            .limit(8)
+            .execute()
+            .value) ?? []
+
         do {
-            let fetchedCourses = try await GooglePlacesService.shared.searchGolfCourses(query: query)
+            let fetchedCourses = try await _fetchedCourses
             self.filteredCourses = fetchedCourses
         } catch {
             print("Failed to search courses: \(error)")
             self.filteredCourses = self.courses.filter { $0.name.localizedCaseInsensitiveContains(query) || $0.location.localizedCaseInsensitiveContains(query) }
         }
+        
+        let fetchedProfiles = await _fetchedProfiles
+        self.filteredUsers = fetchedProfiles.map { profile in
+            User(
+                id: profile.id,
+                username: profile.username,
+                fullName: profile.fullName ?? profile.username,
+                isVerified: profile.isUniversityVerified ?? false,
+                profileImageName: profile.avatarUrl ?? "profile_placeholder",
+                university: nil,
+                handicap: profile.handicap ?? 0.0,
+                averageScore: 0.0,
+                bestRound: 0,
+                roundsPlayed: 0,
+                badges: profile.isUniversityVerified == true ? [.verified] : [],
+                bio: profile.bio,
+                friendsCount: 0
+            )
+        }
+        
         isLoading = false
     }
 }

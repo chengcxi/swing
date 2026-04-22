@@ -265,6 +265,60 @@ class AppViewModel: ObservableObject {
         }
     }
 
+    // MARK: - Friends & Search
+    
+    func searchUsers(query: String) async -> [User] {
+        if query.isEmpty { return [] }
+        do {
+            let limitQuery = "%\(query)%"
+            let profiles: [DBProfile] = try await supabase.from("profiles")
+                .select()
+                .or("username.ilike.\(limitQuery),full_name.ilike.\(limitQuery)")
+                .limit(20)
+                .execute()
+                .value
+
+            return profiles.map { profile in
+                User(
+                    id: profile.id,
+                    username: profile.username,
+                    fullName: profile.fullName ?? profile.username,
+                    isVerified: profile.isUniversityVerified ?? false,
+                    profileImageName: profile.avatarUrl ?? "profile_placeholder",
+                    university: nil,
+                    handicap: profile.handicap ?? 0.0,
+                    averageScore: 0.0,
+                    bestRound: 0,
+                    roundsPlayed: 0,
+                    badges: profile.isUniversityVerified == true ? [.verified] : [],
+                    bio: profile.bio,
+                    friendsCount: 0
+                )
+            }
+        } catch {
+            print("Failed to search users: \(error)")
+            return []
+        }
+    }
+
+    func addFriend(userId: UUID) async {
+        guard let currentId = currentUser?.id else { return }
+        let follow = DBFollow(followerId: currentId, followingId: userId)
+        do {
+            try await supabase.from("follows")
+                .insert(follow)
+                .execute()
+            
+            // Optionally update locally
+            if var user = currentUser {
+                user.friendsCount += 1
+                self.currentUser = user
+            }
+        } catch {
+            print("Failed to follow user: \(error)")
+        }
+    }
+
     // MARK: - Auth Listener
 
     private func listenForAuthChanges() {

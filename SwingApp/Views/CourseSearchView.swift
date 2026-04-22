@@ -60,6 +60,30 @@ struct CourseSearchView: View {
                     }
                     .padding(.vertical, 12)
 
+                    // People section
+                    if !viewModel.filteredUsers.isEmpty {
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack {
+                                Text("People")
+                                    .font(GolfrFonts.headline())
+                                    .foregroundColor(GolfrColors.textSecondary)
+                                Spacer()
+                            }
+                            .padding(.horizontal)
+                            .padding(.top, 8)
+                            
+                            ForEach(viewModel.filteredUsers) { user in
+                                UserRow(user: user)
+                                    .padding(.horizontal)
+                            }
+                        }
+                        .padding(.bottom, 12)
+                        
+                        Divider()
+                            .padding(.horizontal)
+                            .padding(.bottom, 12)
+                    }
+
                     // Featured course header card
                     if !viewModel.filteredCourses.isEmpty {
                         FeaturedCourseCard(course: viewModel.filteredCourses[0])

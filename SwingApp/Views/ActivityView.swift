@@ -134,7 +134,9 @@ struct ActivityView: View {
 // MARK: - Activity Row
 
 struct ActivityRow: View {
+    @EnvironmentObject var appViewModel: AppViewModel
     let activity: ActivityItem
+    @State private var friendRequested = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -179,13 +181,21 @@ struct ActivityRow: View {
             // Friend request: accept/decline buttons below content
             if activity.type == .friendRequest {
                 HStack(spacing: 8) {
-                    Button(action: {}) {
-                        Text("Accept")
+                    Button(action: {
+                        if !friendRequested {
+                            Task {
+                                // Simulate Add Friend with UUID since activity items are mocks without IDs
+                                await appViewModel.addFriend(userId: UUID())
+                                friendRequested = true
+                            }
+                        }
+                    }) {
+                        Text(friendRequested ? "Accepted" : "Accept")
                             .font(GolfrFonts.caption())
-                            .foregroundColor(.white)
+                            .foregroundColor(friendRequested ? GolfrColors.textSecondary : .white)
                             .padding(.horizontal, 16)
                             .padding(.vertical, 8)
-                            .background(Capsule().fill(GolfrColors.primaryLight))
+                            .background(Capsule().fill(friendRequested ? GolfrColors.backgroundElevated : GolfrColors.primaryLight))
                     }
 
                     Button(action: {}) {

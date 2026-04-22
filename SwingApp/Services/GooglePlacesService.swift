@@ -78,10 +78,9 @@ class GooglePlacesService {
                 id: UUID(),
                 name: place.name,
                 location: place.formattedAddress ?? "Unknown Location",
-                city: place.formattedAddress?.components(separatedBy: ",").dropFirst().first?.trimmingCharacters(in: .whitespaces) ?? "Unknown",
-                state: place.formattedAddress?.components(separatedBy: ",").dropFirst(2).first?.trimmingCharacters(in: .whitespaces) ?? "",
-                difficulty: Double.random(in: 3.0...10.0), // Mock difficulty
                 holes: 18,
+                par: 72,
+                difficulty: Double.random(in: 3.0...10.0), // Mock difficulty
                 hasDrivingRange: Bool.random(),
                 hasPuttingGreen: Bool.random()
             )
