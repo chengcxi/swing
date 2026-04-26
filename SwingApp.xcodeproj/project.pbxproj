@@ -35,6 +35,8 @@
 		B23958062F47EABF00CD4EDA /* SupabaseClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23958052F47EABE00CD4EDA /* SupabaseClient.swift */; };
 		B23958072F47EABF00CD4EDA /* Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23958042F47EABE00CD4EDA /* Secrets.swift */; };
 		B23958092F47EADB00CD4EDA /* DatabaseModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23958082F47EADB00CD4EDA /* DatabaseModels.swift */; };
+		B2F99B332F9C5BAC00ABF318 /* GooglePlacesService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2F99B322F9C5BAC00ABF318 /* GooglePlacesService.swift */; };
+		B2F99B352F9C5C5E00ABF318 /* UserRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2F99B342F9C5C5E00ABF318 /* UserRow.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -65,6 +67,8 @@
 		B23958042F47EABE00CD4EDA /* Secrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Secrets.swift; sourceTree = "<group>"; };
 		B23958052F47EABE00CD4EDA /* SupabaseClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseClient.swift; sourceTree = "<group>"; };
 		B23958082F47EADB00CD4EDA /* DatabaseModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseModels.swift; sourceTree = "<group>"; };
+		B2F99B322F9C5BAC00ABF318 /* GooglePlacesService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooglePlacesService.swift; sourceTree = "<group>"; };
+		B2F99B342F9C5C5E00ABF318 /* UserRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserRow.swift; sourceTree = "<group>"; };
 		C10000010000000000000001 /* SwingApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SwingApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -155,6 +159,7 @@
 		E10000010000000000000007 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				B2F99B342F9C5C5E00ABF318 /* UserRow.swift */,
 				B10000010000000000000013 /* PostRow.swift */,
 				B10000010000000000000014 /* CourseRow.swift */,
 				B10000010000000000000015 /* StatsCard.swift */,
@@ -187,6 +192,7 @@
 		E10000010000000000000010 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				B2F99B322F9C5BAC00ABF318 /* GooglePlacesService.swift */,
 				B23958042F47EABE00CD4EDA /* Secrets.swift */,
 				B23958052F47EABE00CD4EDA /* SupabaseClient.swift */,
 				B10000010000000000000023 /* APIService.swift */,
@@ -293,6 +299,7 @@
 				A10000010000000000000007 /* ProfileView.swift in Sources */,
 				A10000010000000000000008 /* ActivityView.swift in Sources */,
 				A10000010000000000000009 /* AddRoundView.swift in Sources */,
+				B2F99B352F9C5C5E00ABF318 /* UserRow.swift in Sources */,
 				A10000010000000000000010 /* LoginView.swift in Sources */,
 				A10000010000000000000011 /* AnalyticsView.swift in Sources */,
 				A10000010000000000000012 /* RankingsView.swift in Sources */,
@@ -301,6 +308,7 @@
 				A10000010000000000000014 /* CourseRow.swift in Sources */,
 				A10000010000000000000015 /* StatsCard.swift in Sources */,
 				A10000010000000000000016 /* AppViewModel.swift in Sources */,
+				B2F99B332F9C5BAC00ABF318 /* GooglePlacesService.swift in Sources */,
 				A10000010000000000000017 /* FeedViewModel.swift in Sources */,
 				A10000010000000000000018 /* CourseViewModel.swift in Sources */,
 				A10000010000000000000019 /* User.swift in Sources */,
@@ -443,6 +451,7 @@
 				DEVELOPMENT_TEAM = TZ5U47S57L;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Golfr uses your location to show nearby golf courses.";
 				INFOPLIST_KEY_UIAppFonts = "Fredoka-Variable.ttf";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -472,6 +481,7 @@
 				DEVELOPMENT_TEAM = TZ5U47S57L;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Golfr uses your location to show nearby golf courses.";
 				INFOPLIST_KEY_UIAppFonts = "Fredoka-Variable.ttf";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

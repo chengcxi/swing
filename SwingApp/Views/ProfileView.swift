@@ -83,6 +83,10 @@ struct ProfileView: View {
             }
             .sheet(isPresented: $showAllRounds) {
                 AllRoundsSheet()
+                    .environmentObject(appViewModel)
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .openEditProfile)) { _ in
+                showEditProfile = true
             }
         }
     }
@@ -93,29 +97,26 @@ struct ProfileView: View {
 struct BurgerMenuSheet: View {
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var appViewModel: AppViewModel
+    @State private var showShareSheet = false
+    @State private var confirmSignOut = false
 
     var body: some View {
         NavigationStack {
             List {
-                BurgerMenuItem(icon: "bookmark", title: "Saved Posts")
-                BurgerMenuItem(icon: "heart", title: "Liked Posts")
-                BurgerMenuItem(icon: "bell", title: "Notifications")
-                BurgerMenuItem(icon: "link", title: "Invite Friends")
-                
-                Button(action: {
-                    Task {
-                        await appViewModel.signOut()
+                Section {
+                    BurgerMenuItem(icon: "person.crop.circle", title: "Edit Profile") {
                         dismiss()
+                        // ProfileView listens for this via NotificationCenter
+                        NotificationCenter.default.post(name: .openEditProfile, object: nil)
                     }
-                }) {
-                    HStack(spacing: 14) {
-                        Image(systemName: "arrow.turn.up.left")
-                            .font(.system(size: 16))
-                            .foregroundColor(GolfrColors.error)
-                            .frame(width: 28)
-                        Text("Sign Out")
-                            .font(GolfrFonts.body())
-                            .foregroundColor(GolfrColors.error)
+                    BurgerMenuItem(icon: "person.2.fill", title: "Invite Friends") {
+                        showShareSheet = true
+                    }
+                }
+
+                Section {
+                    BurgerMenuItem(icon: "rectangle.portrait.and.arrow.right", title: "Sign Out", tint: GolfrColors.error) {
+                        confirmSignOut = true
                     }
                 }
             }
@@ -128,28 +129,60 @@ struct BurgerMenuSheet: View {
                         .foregroundColor(GolfrColors.primaryLight)
                 }
             }
+            .alert("Sign out?", isPresented: $confirmSignOut) {
+                Button("Cancel", role: .cancel) {}
+                Button("Sign Out", role: .destructive) {
+                    Task {
+                        await appViewModel.signOut()
+                        dismiss()
+                    }
+                }
+            } message: {
+                Text("You'll need to sign in again to use Golfr.")
+            }
+            .sheet(isPresented: $showShareSheet) {
+                ShareSheet(items: ["Join me on Golfr — track your rounds and find your crew. https://golfr.app"])
+            }
         }
     }
+}
+
+// Notification used to bridge BurgerMenuSheet → ProfileView for the Edit Profile sheet
+extension Notification.Name {
+    static let openEditProfile = Notification.Name("openEditProfile")
+}
+
+// UIKit share sheet bridge
+struct ShareSheet: UIViewControllerRepresentable {
+    let items: [Any]
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: items, applicationActivities: nil)
+    }
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 struct BurgerMenuItem: View {
     let icon: String
     let title: String
+    var tint: Color = GolfrColors.primaryLight
+    var action: () -> Void = {}
 
     var body: some View {
-        Button(action: {}) {
+        Button(action: action) {
             HStack(spacing: 14) {
                 Image(systemName: icon)
                     .font(.system(size: 16))
-                    .foregroundColor(GolfrColors.primaryLight)
+                    .foregroundColor(tint)
                     .frame(width: 28)
                 Text(title)
                     .font(GolfrFonts.body())
-                    .foregroundColor(GolfrColors.textPrimary)
+                    .foregroundColor(tint == GolfrColors.error ? GolfrColors.error : GolfrColors.textPrimary)
                 Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 12))
-                    .foregroundColor(GolfrColors.textSecondary)
+                if tint != GolfrColors.error {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12))
+                        .foregroundColor(GolfrColors.textSecondary)
+                }
             }
         }
     }
@@ -407,7 +440,9 @@ struct ProfileTabPicker: View {
 // MARK: - Rounds List View
 
 struct RoundsListView: View {
-    let rounds = Round.mocks
+    @EnvironmentObject var appViewModel: AppViewModel
+    @State private var rounds: [Round] = []
+    @State private var isLoading = false
     var onSeeAllTapped: () -> Void = {}
 
     var body: some View {
@@ -425,23 +460,49 @@ struct RoundsListView: View {
             }
             .padding(.horizontal)
 
-            ForEach(rounds) { round in
-                RoundListItem(round: round)
-                    .padding(.horizontal)
+            if isLoading && rounds.isEmpty {
+                ProgressView()
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 24)
+            } else if rounds.isEmpty {
+                VStack(spacing: 8) {
+                    Image(systemName: "flag")
+                        .font(.system(size: 28))
+                        .foregroundColor(GolfrColors.textSecondary.opacity(0.4))
+                    Text("No rounds yet")
+                        .font(GolfrFonts.callout())
+                        .foregroundColor(GolfrColors.textSecondary)
+                    Text("Log a round to see it here.")
+                        .font(GolfrFonts.caption())
+                        .foregroundColor(GolfrColors.textSecondary.opacity(0.8))
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 24)
+            } else {
+                ForEach(rounds.prefix(5)) { round in
+                    RoundListItem(round: round)
+                        .padding(.horizontal)
+                }
             }
         }
+        .task(id: appViewModel.currentUser?.id) {
+            await load()
+        }
+    }
+
+    private func load() async {
+        isLoading = true
+        rounds = await appViewModel.fetchRounds()
+        isLoading = false
     }
 }
 
 struct RoundListItem: View {
     let round: Round
-    @State private var showPostConfirmation = false
-    @State private var posted = false
 
     var body: some View {
-        VStack(alignment: .trailing, spacing: 0) {
+        Button(action: shareRound) {
             HStack(alignment: .top, spacing: 14) {
-                // Score badge — fixed size, pinned to top
                 Text("\(round.score)")
                     .font(.system(size: 22, weight: .bold, design: .rounded))
                     .foregroundColor(GolfrColors.primary)
@@ -481,42 +542,21 @@ struct RoundListItem: View {
                         .font(GolfrFonts.caption())
                         .foregroundColor(GolfrColors.textSecondary)
 
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundColor(GolfrColors.textSecondary.opacity(0.5))
+                    Image(systemName: "square.and.arrow.up")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(GolfrColors.primaryLight)
                 }
             }
+            .padding(12)
+            .golfrCard(cornerRadius: 14)
+        }
+        .buttonStyle(.plain)
+    }
 
-            // Post link — aligned with chevron above
-            Button(action: {
-                if posted {
-                    // Already posted
-                } else {
-                    showPostConfirmation = true
-                }
-            }) {
-                HStack(spacing: 4) {
-                    Image(systemName: posted ? "checkmark.circle.fill" : "square.and.arrow.up")
-                        .font(.system(size: 11))
-                    Text(posted ? "Posted" : "Post")
-                        .font(GolfrFonts.caption())
-                }
-                .foregroundColor(posted ? GolfrColors.primary : GolfrColors.primaryLight)
-            }
-            .padding(.top, -16)
-        }
-        .padding(.horizontal, 12)
-        .padding(.top, 12)
-        .padding(.bottom, 12)
-        .golfrCard(cornerRadius: 14)
-        .alert("Share to Feed", isPresented: $showPostConfirmation) {
-            Button("Post", role: nil) {
-                withAnimation { posted = true }
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("Share your \(round.score) at \(round.courseName) to your feed?")
-        }
+    private func shareRound() {
+        UIApplication.shared.share(items: [
+            "I shot \(round.score) at \(round.courseName) on Golfr ⛳️"
+        ])
     }
 
     func dateString(from date: Date) -> String {
@@ -654,7 +694,9 @@ struct EditProfileField: View {
 
 struct AllRoundsSheet: View {
     @Environment(\.dismiss) var dismiss
-    let rounds = Round.mocks
+    @EnvironmentObject var appViewModel: AppViewModel
+    @State private var rounds: [Round] = []
+    @State private var isLoading = false
 
     var body: some View {
         NavigationStack {
@@ -663,6 +705,14 @@ struct AllRoundsSheet: View {
 
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 12) {
+                        if isLoading && rounds.isEmpty {
+                            ProgressView().padding(.top, 60)
+                        } else if rounds.isEmpty {
+                            Text("No rounds logged yet")
+                                .font(GolfrFonts.callout())
+                                .foregroundColor(GolfrColors.textSecondary)
+                                .padding(.top, 80)
+                        }
                         ForEach(rounds) { round in
                             RoundListItem(round: round)
                         }
@@ -678,6 +728,11 @@ struct AllRoundsSheet: View {
                     Button("Done") { dismiss() }
                         .foregroundColor(GolfrColors.primary)
                 }
+            }
+            .task {
+                isLoading = true
+                rounds = await appViewModel.fetchRounds()
+                isLoading = false
             }
         }
     }

@@ -172,32 +172,6 @@ struct LoginView: View {
                         .opacity(email.isEmpty || password.isEmpty ? 0.6 : 1.0)
                         .padding(.top, 4)
 
-                        // Divider
-                        HStack {
-                            Rectangle().fill(GolfrColors.textSecondary.opacity(0.2)).frame(height: 1)
-                            Text("or")
-                                .font(GolfrFonts.caption())
-                                .foregroundColor(GolfrColors.textSecondary)
-                            Rectangle().fill(GolfrColors.textSecondary.opacity(0.2)).frame(height: 1)
-                        }
-
-                        // Sign in with Apple
-                        Button(action: {}) {
-                            HStack(spacing: 8) {
-                                Image(systemName: "apple.logo")
-                                    .font(.system(size: 18))
-                                Text("Continue with Apple")
-                                    .font(GolfrFonts.headline())
-                            }
-                            .foregroundColor(GolfrColors.textPrimary)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .background(
-                                Capsule()
-                                    .fill(GolfrColors.backgroundCard)
-                                    .shadow(color: Color.black.opacity(0.06), radius: 4, x: 0, y: 2)
-                            )
-                        }
                     }
                     .padding(24)
                     .background(

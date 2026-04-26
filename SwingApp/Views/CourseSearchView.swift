@@ -2,13 +2,7 @@ import SwiftUI
 
 struct CourseSearchView: View {
     @StateObject private var viewModel = CourseViewModel()
-    @State private var selectedFilter: CourseFilter = .all
-    enum CourseFilter: String, CaseIterable {
-        case all = "All"
-        case nearby = "Nearby"
-        case topRated = "Top Rated"
-        case practiced = "Practiced"
-    }
+    @State private var showLocationAlert = false
 
     var body: some View {
         NavigationStack {
@@ -22,6 +16,8 @@ struct CourseSearchView: View {
 
                         TextField("Search courses, cities & friends", text: $viewModel.searchText)
                             .font(GolfrFonts.body())
+                            .autocapitalization(.none)
+                            .autocorrectionDisabled(true)
 
                         if !viewModel.searchText.isEmpty {
                             Button(action: { viewModel.searchText = "" }) {
@@ -45,20 +41,26 @@ struct CourseSearchView: View {
                     // Filter pills
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 8) {
-                            ForEach(CourseFilter.allCases, id: \.self) { filter in
+                            ForEach(DiscoverFilter.allCases, id: \.self) { filter in
                                 Button(action: {
                                     withAnimation(.easeInOut(duration: 0.2)) {
-                                        selectedFilter = filter
+                                        viewModel.setFilter(filter)
                                     }
                                 }) {
                                     Text(filter.rawValue)
-                                        .golfrPillButton(isActive: selectedFilter == filter)
+                                        .golfrPillButton(isActive: viewModel.selectedFilter == filter)
                                 }
                             }
                         }
                         .padding(.horizontal)
                     }
                     .padding(.vertical, 12)
+
+                    if viewModel.locationDenied && viewModel.selectedFilter == .nearby {
+                        LocationDeniedBanner()
+                            .padding(.horizontal)
+                            .padding(.bottom, 8)
+                    }
 
                     // People section
                     if !viewModel.filteredUsers.isEmpty {
@@ -71,34 +73,40 @@ struct CourseSearchView: View {
                             }
                             .padding(.horizontal)
                             .padding(.top, 8)
-                            
+
                             ForEach(viewModel.filteredUsers) { user in
                                 UserRow(user: user)
                                     .padding(.horizontal)
                             }
                         }
                         .padding(.bottom, 12)
-                        
+
                         Divider()
                             .padding(.horizontal)
                             .padding(.bottom, 12)
                     }
 
-                    // Featured course header card
-                    if !viewModel.filteredCourses.isEmpty {
+                    // Loading / Empty
+                    if viewModel.isLoading && viewModel.filteredCourses.isEmpty {
+                        ProgressView().padding(.top, 40)
+                    } else if viewModel.filteredCourses.isEmpty {
+                        DiscoverEmptyState(filter: viewModel.selectedFilter, hasQuery: !viewModel.searchText.isEmpty)
+                            .padding(.horizontal)
+                            .padding(.top, 24)
+                    } else {
                         FeaturedCourseCard(course: viewModel.filteredCourses[0])
                             .padding(.horizontal)
                             .padding(.bottom, 12)
-                    }
 
-                    // Course List
-                    LazyVStack(spacing: 12) {
-                        ForEach(viewModel.filteredCourses.dropFirst()) { course in
-                            CourseListCard(course: course)
-                                .padding(.horizontal)
+                        LazyVStack(spacing: 12) {
+                            ForEach(viewModel.filteredCourses.dropFirst()) { course in
+                                CourseListCard(course: course)
+                                    .padding(.horizontal)
+                            }
                         }
                     }
-                    .padding(.bottom, 100)
+
+                    Spacer().frame(height: 100)
                 }
             }
             .background(GolfrColors.backgroundPrimary.ignoresSafeArea())
@@ -113,14 +121,82 @@ struct CourseSearchView: View {
                         .background(Capsule().fill(GolfrColors.backgroundCard))
                         .fixedSize()
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    HStack(spacing: 8) {
-                        GolfrNavButton(icon: "map") {}
-                        GolfrNavButton(icon: "slider.horizontal.3") {}
-                    }
-                }
             }
         }
+    }
+}
+
+// MARK: - Discover empty / location states
+
+struct DiscoverEmptyState: View {
+    let filter: DiscoverFilter
+    let hasQuery: Bool
+
+    var body: some View {
+        VStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.system(size: 28))
+                .foregroundColor(GolfrColors.textSecondary.opacity(0.4))
+            Text(title)
+                .font(GolfrFonts.headline())
+                .foregroundColor(GolfrColors.textPrimary)
+            Text(subtitle)
+                .font(GolfrFonts.caption())
+                .foregroundColor(GolfrColors.textSecondary)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 30)
+    }
+
+    private var icon: String {
+        switch filter {
+        case .nearby: return "location.slash"
+        case .practiced: return "flag"
+        default: return "magnifyingglass"
+        }
+    }
+    private var title: String {
+        if hasQuery { return "No courses found" }
+        switch filter {
+        case .practiced: return "No courses played yet"
+        case .nearby: return "No nearby courses"
+        default: return "No courses yet"
+        }
+    }
+    private var subtitle: String {
+        switch filter {
+        case .practiced: return "Log a round and the course will show up here."
+        case .nearby: return "Try a wider area or another filter."
+        default: return "Try searching for a course or city."
+        }
+    }
+}
+
+struct LocationDeniedBanner: View {
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "location.slash.fill")
+                .foregroundColor(GolfrColors.warning)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Location access denied")
+                    .font(GolfrFonts.callout())
+                    .foregroundColor(GolfrColors.textPrimary)
+                Text("Enable location in Settings to see nearby courses.")
+                    .font(GolfrFonts.caption())
+                    .foregroundColor(GolfrColors.textSecondary)
+            }
+            Spacer()
+            Button("Open") {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }
+            .font(GolfrFonts.caption())
+            .foregroundColor(GolfrColors.primary)
+        }
+        .padding(12)
+        .golfrCard(cornerRadius: 12)
     }
 }
 

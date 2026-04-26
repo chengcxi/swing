@@ -2,7 +2,7 @@ import Foundation
 import Supabase
 
 let supabase = SupabaseClient(
-    supabaseURL: URL(string: Secrets.supabaseURL)!,
+    supabaseURL: Secrets.supabaseURL,
     supabaseKey: Secrets.supabaseAnonKey,
     options: SupabaseClientOptions(
         db: .init(schema: "public"),
