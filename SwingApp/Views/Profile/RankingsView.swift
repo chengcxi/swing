@@ -312,16 +312,16 @@ struct AddRankingSheet: View {
                     id: db.id,
                     name: db.name,
                     location: loc.isEmpty ? db.address : loc,
-                    holes: db.holes ?? 18,
-                    par: db.par ?? 72,
-                    difficulty: db.courseRating ?? 0,
-                    hasDrivingRange: false,
-                    hasPuttingGreen: false,
-                    latitude: db.latitude,
-                    longitude: db.longitude,
-                    googlePlaceId: db.googlePlaceId,
-                    city: db.city,
-                    state: db.state
+                    // holes: db.holes ?? 18,
+                    // par: db.par ?? 72,
+                    // difficulty: db.courseRating ?? 0,
+                    // hasDrivingRange: false,
+                    // hasPuttingGreen: false,
+                    // latitude: db.latitude,
+                    // longitude: db.longitude,
+                    // googlePlaceId: db.googlePlaceId,
+                    // city: db.city,
+                    // state: db.state
                 )
             }
         } catch {

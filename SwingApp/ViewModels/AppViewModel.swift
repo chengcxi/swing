@@ -438,16 +438,16 @@ class AppViewModel: ObservableObject {
                     id: dbCourse.id,
                     name: dbCourse.name,
                     location: loc.isEmpty ? dbCourse.address : loc,
-                    holes: dbCourse.holes ?? 18,
-                    par: dbCourse.par ?? 72,
-                    difficulty: dbCourse.courseRating ?? 0,
-                    hasDrivingRange: false,
-                    hasPuttingGreen: false,
-                    latitude: dbCourse.latitude,
-                    longitude: dbCourse.longitude,
-                    googlePlaceId: dbCourse.googlePlaceId,
-                    city: dbCourse.city,
-                    state: dbCourse.state
+                    // holes: dbCourse.holes ?? 18,
+                    // par: dbCourse.par ?? 72,
+                    // difficulty: dbCourse.courseRating ?? 0,
+                    // hasDrivingRange: false,
+                    // hasPuttingGreen: false,
+                    // latitude: dbCourse.latitude,
+                    // longitude: dbCourse.longitude,
+                    // googlePlaceId: dbCourse.googlePlaceId,
+                    // city: dbCourse.city,
+                    // state: dbCourse.state
                 )
             }
         } catch {
