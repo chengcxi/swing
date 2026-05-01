@@ -2,9 +2,42 @@ import SwiftUI
 import Charts
 
 struct AnalyticsView: View {
-    let rounds = Round.mocks
+    @EnvironmentObject var appViewModel: AppViewModel
+    @State private var rounds: [Round] = []
+    @State private var isLoading = false
 
     var body: some View {
+        Group {
+            if isLoading && rounds.isEmpty {
+                ProgressView()
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 40)
+            } else if rounds.isEmpty {
+                VStack(spacing: 8) {
+                    Image(systemName: "chart.xyaxis.line")
+                        .font(.system(size: 28))
+                        .foregroundColor(GolfrColors.textSecondary.opacity(0.4))
+                    Text("No analytics yet")
+                        .font(GolfrFonts.headline())
+                        .foregroundColor(GolfrColors.textPrimary)
+                    Text("Log a round to see your trends.")
+                        .font(GolfrFonts.caption())
+                        .foregroundColor(GolfrColors.textSecondary)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 40)
+            } else {
+                chartsContent
+            }
+        }
+        .task(id: appViewModel.currentUser?.id) {
+            isLoading = true
+            rounds = await appViewModel.fetchRounds()
+            isLoading = false
+        }
+    }
+
+    private var chartsContent: some View {
         VStack(alignment: .leading, spacing: 16) {
             // Score Trends Chart
             VStack(alignment: .leading, spacing: 10) {

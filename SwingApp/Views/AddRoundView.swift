@@ -2,12 +2,15 @@ import SwiftUI
 
 struct AddRoundView: View {
     @Environment(\.dismiss) var dismiss
-    @State private var selectedCourse = ""
+    @EnvironmentObject var appViewModel: AppViewModel
+    @State private var selectedCourse: Course?
     @State private var holes: Int = 18
     @State private var date = Date()
     @State private var notes = ""
     @State private var currentStep = 0
     @State private var holeScores: [HoleScoreEntry] = []
+    @State private var isSaving = false
+    @State private var saveError: String?
 
     var totalScore: Int {
         holeScores.reduce(0) { $0 + $1.score }
@@ -36,7 +39,7 @@ struct AddRoundView: View {
                                 HoleByHoleEntryStep(holeScores: $holeScores)
                             case 3:
                                 ReviewStep(
-                                    courseName: selectedCourse.isEmpty ? "Select a course" : selectedCourse,
+                                    courseName: selectedCourse?.name ?? "Select a course",
                                     score: "\(totalScore)",
                                     holes: holes,
                                     date: date,
@@ -75,24 +78,14 @@ struct AddRoundView: View {
                             }
                         }
 
-                        Button(action: {
-                            if currentStep < 3 {
-                                withAnimation(.easeInOut(duration: 0.25)) {
-                                    currentStep += 1
-                                }
-                            } else {
-                                // Submit round
-                                dismiss()
-                            }
-                        }) {
+                        Button(action: handlePrimaryAction) {
                             HStack {
-                                Text(currentStep == 3 ? "Save Round" : "Continue")
-                                    .font(GolfrFonts.headline())
-                                if currentStep < 3 {
-                                    Image(systemName: "arrow.right")
-                                        .font(.system(size: 14, weight: .semibold))
+                                if isSaving {
+                                    ProgressView().tint(.white)
                                 } else {
-                                    Image(systemName: "checkmark")
+                                    Text(currentStep == 3 ? "Save Round" : "Continue")
+                                        .font(GolfrFonts.headline())
+                                    Image(systemName: currentStep == 3 ? "checkmark" : "arrow.right")
                                         .font(.system(size: 14, weight: .semibold))
                                 }
                             }
@@ -102,8 +95,10 @@ struct AddRoundView: View {
                             .background(
                                 Capsule().fill(GolfrColors.heroGradient)
                             )
+                            .opacity(canAdvance ? 1.0 : 0.5)
                             .shadow(color: GolfrColors.primary.opacity(0.3), radius: 8, x: 0, y: 4)
                         }
+                        .disabled(!canAdvance || isSaving)
                     }
                     .padding(.horizontal)
                     .padding(.bottom, 32)
@@ -135,6 +130,58 @@ struct AddRoundView: View {
                         .foregroundColor(GolfrColors.textPrimary)
                 }
             }
+            .alert("Couldn't save round", isPresented: errorBinding) {
+                Button("OK") { saveError = nil }
+            } message: {
+                Text(saveError ?? "")
+            }
+        }
+    }
+
+    private var errorBinding: Binding<Bool> {
+        Binding(
+            get: { saveError != nil },
+            set: { if !$0 { saveError = nil } }
+        )
+    }
+
+    private var canAdvance: Bool {
+        switch currentStep {
+        case 0: return selectedCourse != nil
+        case 1: return !holeScores.isEmpty
+        case 2: return holeScores.allSatisfy { $0.score > 0 }
+        case 3: return totalScore > 0
+        default: return false
+        }
+    }
+
+    private func handlePrimaryAction() {
+        if currentStep < 3 {
+            withAnimation(.easeInOut(duration: 0.25)) {
+                currentStep += 1
+            }
+            return
+        }
+        guard let course = selectedCourse else { return }
+
+        isSaving = true
+        Task {
+            // Resolve to a real Supabase course ID
+            let courseId = await appViewModel.findOrCreateCourse(from: course)
+            let success = await appViewModel.saveRound(
+                course: course,
+                courseId: courseId,
+                score: totalScore,
+                date: date,
+                notes: notes.isEmpty ? nil : notes,
+                holeScores: holeScores
+            )
+            isSaving = false
+            if success {
+                dismiss()
+            } else {
+                saveError = "Something went wrong saving your round. Please try again."
+            }
         }
     }
 }
@@ -160,15 +207,11 @@ struct ProgressBar: View {
 // MARK: - Step 1: Course Selection
 
 struct CourseSelectionStep: View {
-    @Binding var selectedCourse: String
+    @Binding var selectedCourse: Course?
     @State private var searchText = ""
-
-    let courses = Course.mocks
-
-    var filteredCourses: [Course] {
-        if searchText.isEmpty { return courses }
-        return courses.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
-    }
+    @State private var courses: [Course] = []
+    @State private var isLoading = false
+    @State private var searchTask: Task<Void, Never>?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -181,12 +224,14 @@ struct CourseSelectionStep: View {
                     .foregroundColor(GolfrColors.textSecondary)
             }
 
-            // Search
             HStack(spacing: 10) {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(GolfrColors.textSecondary)
                 TextField("Course name...", text: $searchText)
                     .font(GolfrFonts.body())
+                    .onChange(of: searchText) { newValue in
+                        scheduleSearch(query: newValue)
+                    }
             }
             .padding(14)
             .background(
@@ -198,42 +243,80 @@ struct CourseSelectionStep: View {
                     .stroke(GolfrColors.textSecondary.opacity(0.1), lineWidth: 1)
             )
 
-            // Course options
-            ForEach(filteredCourses) { course in
-                Button(action: {
-                    selectedCourse = course.name
-                }) {
-                    HStack(spacing: 12) {
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                .fill(selectedCourse == course.name ? GolfrColors.primary.opacity(0.1) : GolfrColors.backgroundElevated)
-                                .frame(width: 44, height: 44)
-                            Image(systemName: "figure.golf")
-                                .font(.system(size: 18))
-                                .foregroundColor(selectedCourse == course.name ? GolfrColors.primary : GolfrColors.textSecondary)
-                        }
+            if isLoading && courses.isEmpty {
+                ProgressView()
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 16)
+            } else if courses.isEmpty {
+                Text(searchText.isEmpty ? "Type to search courses" : "No courses found")
+                    .font(GolfrFonts.callout())
+                    .foregroundColor(GolfrColors.textSecondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 24)
+            } else {
+                ForEach(courses) { course in
+                    Button(action: {
+                        selectedCourse = course
+                    }) {
+                        HStack(spacing: 12) {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                    .fill(selectedCourse?.id == course.id ? GolfrColors.primary.opacity(0.1) : GolfrColors.backgroundElevated)
+                                    .frame(width: 44, height: 44)
+                                Image(systemName: "figure.golf")
+                                    .font(.system(size: 18))
+                                    .foregroundColor(selectedCourse?.id == course.id ? GolfrColors.primary : GolfrColors.textSecondary)
+                            }
 
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(course.name)
-                                .font(GolfrFonts.headline())
-                                .foregroundColor(GolfrColors.textPrimary)
-                            Text(course.location)
-                                .font(GolfrFonts.caption())
-                                .foregroundColor(GolfrColors.textSecondary)
-                        }
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(course.name)
+                                    .font(GolfrFonts.headline())
+                                    .foregroundColor(GolfrColors.textPrimary)
+                                Text(course.location)
+                                    .font(GolfrFonts.caption())
+                                    .foregroundColor(GolfrColors.textSecondary)
+                                    .lineLimit(1)
+                            }
 
-                        Spacer()
+                            Spacer()
 
-                        if selectedCourse == course.name {
-                            Image(systemName: "checkmark.circle.fill")
-                                .font(.system(size: 20))
-                                .foregroundColor(GolfrColors.primaryLight)
+                            if selectedCourse?.id == course.id {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.system(size: 20))
+                                    .foregroundColor(GolfrColors.primaryLight)
+                            }
                         }
+                        .padding(12)
+                        .golfrCard(cornerRadius: 14)
                     }
-                    .padding(12)
-                    .golfrCard(cornerRadius: 14)
                 }
             }
+        }
+        .onAppear {
+            if courses.isEmpty {
+                scheduleSearch(query: "")
+            }
+        }
+    }
+
+    private func scheduleSearch(query: String) {
+        searchTask?.cancel()
+        searchTask = Task {
+            try? await Task.sleep(nanoseconds: 350_000_000)
+            if Task.isCancelled { return }
+            await runSearch(query: query)
+        }
+    }
+
+    @MainActor
+    private func runSearch(query: String) async {
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            courses = try await GooglePlacesService.shared.searchGolfCourses(query: query)
+        } catch {
+            print("CourseSelectionStep search failed: \(error)")
+            courses = Course.mocks
         }
     }
 }
@@ -544,21 +627,17 @@ struct ReviewStep: View {
                     )
             }
 
-            // Share toggle
-            HStack {
-                Image(systemName: "square.and.arrow.up")
-                    .font(.system(size: 14))
-                    .foregroundColor(GolfrColors.primaryLight)
-                Text("Share to feed")
-                    .font(GolfrFonts.callout())
-                    .foregroundColor(GolfrColors.textPrimary)
+            // Auto-share notice
+            HStack(spacing: 8) {
+                Image(systemName: "info.circle")
+                    .font(.system(size: 12))
+                    .foregroundColor(GolfrColors.textSecondary)
+                Text("Saved rounds appear in your feed automatically.")
+                    .font(GolfrFonts.caption())
+                    .foregroundColor(GolfrColors.textSecondary)
                 Spacer()
-                Toggle("", isOn: .constant(true))
-                    .tint(GolfrColors.primaryLight)
-                    .labelsHidden()
             }
-            .padding(14)
-            .golfrCard(cornerRadius: 12)
+            .padding(12)
         }
     }
 

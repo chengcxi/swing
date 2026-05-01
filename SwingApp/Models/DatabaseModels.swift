@@ -140,7 +140,7 @@ struct DBHoleScore: Codable, Identifiable {
 struct DBFollow: Codable {
     var followerId: UUID
     var followingId: UUID
-    var createdAt: String?
+    var createdAt: String? = nil
 
     enum CodingKeys: String, CodingKey {
         case followerId = "follower_id"
@@ -152,7 +152,7 @@ struct DBFollow: Codable {
 struct DBLike: Codable {
     var userId: UUID
     var roundId: UUID
-    var createdAt: String?
+    var createdAt: String? = nil
 
     enum CodingKeys: String, CodingKey {
         case userId = "user_id"
@@ -254,5 +254,16 @@ struct UpdateProfile: Codable {
         case username, bio, handicap
         case fullName = "full_name"
         case avatarUrl = "avatar_url"
+    }
+}
+
+struct InsertProfile: Codable {
+    var id: UUID
+    var username: String
+    var fullName: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id, username
+        case fullName = "full_name"
     }
 }
