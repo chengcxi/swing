@@ -1,276 +1,190 @@
 import Foundation
 import Combine
+import GooglePlacesSwift
 import CoreLocation
 
-enum DiscoverFilter: String, CaseIterable {
-    case all = "All"
-    case nearby = "Nearby"
-    case topRated = "Top Rated"
-    case practiced = "Practiced"
-}
-
 @MainActor
-class CourseViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
-    @Published var courses: [Course] = []
-    @Published var searchText: String = ""
-    @Published var filteredCourses: [Course] = []
-    @Published var filteredUsers: [User] = []
-    @Published var selectedFilter: DiscoverFilter = .all
-    @Published var locationDenied = false
-    @Published var isLoading = false
+class CourseViewModel: ObservableObject {
+  @Published var courses: [Course] = []
+  @Published var searchText: String = “”
+  @Published var filteredCourses: [Course] = []
+  @Published var filteredUsers: [User] = []
 
-    private var allLoadedCourses: [Course] = []
-    private var practicedCourses: [Course] = []
-    private var userLocation: CLLocation?
-    private let locationManager = CLLocationManager()
-    private var cancellables = Set<AnyCancellable>()
+  @Published var isLoading = false
+  private var cancellables = Set<AnyCancellable>()
 
-    override init() {
-        super.init()
-        locationManager.delegate = self
-        setupSearch()
-        Task { await fetchInitialCourses() }
-    }
+  init() {
+    setupSearch()
+    Task {
+      await fetchInitialCourses()
+    }
+  }
 
-    // MARK: - Filters
+  private let locationManager = LocationManager()
+  private let fallbackLocation = CLLocationCoordinate2D(latitude: 34.4140, longitude: -119.8489) // UCSB
 
-    func setFilter(_ filter: DiscoverFilter) {
-        selectedFilter = filter
-        switch filter {
-        case .all:
-            filteredCourses = allLoadedCourses
-        case .nearby:
-            requestLocationIfNeeded()
-            applyNearbyFilter()
-        case .topRated:
-            filteredCourses = allLoadedCourses.sorted { $0.difficulty > $1.difficulty }
-        case .practiced:
-            Task { await loadPracticedCourses() }
-        }
-    }
+  func fetchInitialCourses() async {
+    isLoading = true
+    defer { isLoading = false }
 
-    private func applyNearbyFilter() {
-        guard let me = userLocation else {
-            // Wait for the location update; meanwhile show all
-            filteredCourses = allLoadedCourses
-            return
-        }
-        filteredCourses = allLoadedCourses
-            .compactMap { course -> (Course, Double)? in
-                guard let lat = course.latitude, let lng = course.longitude else { return nil }
-                let courseLoc = CLLocation(latitude: lat, longitude: lng)
-                return (course, me.distance(from: courseLoc))
-            }
-            .sorted { $0.1 < $1.1 }
-            .map { $0.0 }
-    }
+    // 1. Get user’s location (falls back to UCSB)
+    let coordinate: CLLocationCoordinate2D
+    do {
+      coordinate = try await locationManager.requestLocation()
+    } catch {
+      print(“Using fallback location: \(error)“)
+      coordinate = fallbackLocation
+    }
 
-    private func loadPracticedCourses() async {
-        isLoading = true
-        defer { isLoading = false }
-        guard let userId = try? await supabase.auth.session.user.id else {
-            filteredCourses = []
-            return
-        }
-        do {
-            let rounds: [DBRound] = try await supabase.from("rounds")
-                .select("*, course:golf_courses(*)")
-                .eq("user_id", value: userId)
-                .execute()
-                .value
+    // 2. Build request — need .coordinate to sort by distance
+    let region = CircularCoordinateRegion(center: coordinate, radius: 50_000)
+    let request = SearchByTextRequest(
+      textQuery: “golf course”,
+      placeProperties: [.placeID, .displayName, .formattedAddress, .coordinate],
+      locationBias: region,
+      maxResultCount: 20
+    )
 
-            // Group by course id, take one row per course
-            var seen = Set<UUID>()
-            var practiced: [Course] = []
-            for round in rounds {
-                guard let dbCourse = round.course, !seen.contains(dbCourse.id) else { continue }
-                seen.insert(dbCourse.id)
-                practiced.append(dbCourse.toCourse())
-            }
-            practicedCourses = practiced
-            filteredCourses = practiced
-        } catch {
-            print("CourseViewModel.loadPracticedCourses failed: \(error)")
-            filteredCourses = []
-        }
-    }
+    // 3. Fetch + sort by distance from user
+    switch await PlacesClient.shared.searchByText(with: request) {
+    case .success(let places):
+      let userLocation = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
 
-    // MARK: - Search
+      let sortedPlaces = places.sorted { lhs, rhs in
+        let lhsDistance = distance(from: userLocation, to: lhs.coordinate)
+        let rhsDistance = distance(from: userLocation, to: rhs.coordinate)
+        return lhsDistance < rhsDistance
+      }
 
-    private func setupSearch() {
-        $searchText
-            .debounce(for: .milliseconds(400), scheduler: RunLoop.main)
-            .removeDuplicates()
-            .sink { [weak self] text in
-                Task { [weak self] in await self?.performSearch(query: text) }
-            }
-            .store(in: &cancellables)
-    }
+      let fetched = sortedPlaces.map { Course(from: $0) }
+      self.courses = fetched
+      self.filteredCourses = fetched
 
-    func fetchInitialCourses() async {
-        isLoading = true
-        defer { isLoading = false }
-        do {
-            let fetched = try await GooglePlacesService.shared.searchGolfCourses(query: "")
-            if fetched.isEmpty {
-                await loadFromSupabase(query: nil)
-            } else {
-                allLoadedCourses = fetched
-                courses = fetched
-                filteredCourses = fetched
-            }
-        } catch {
-            print("CourseViewModel.fetchInitialCourses Places failed: \(error)")
-            await loadFromSupabase(query: nil)
-        }
-    }
+    case .failure(let error):
+      print(“Failed to fetch initial courses: \(error)“)
+      self.courses = Course.mocks
+      self.filteredCourses = Course.mocks
+    }
+  }
 
-    /// Fallback: pull from our own golf_courses table when Google Places fails or returns empty.
-    private func loadFromSupabase(query: String?) async {
-        do {
-            var supaQuery = supabase.from("golf_courses").select()
-            if let query = query, !query.isEmpty {
-                let pattern = "%\(query)%"
-                supaQuery = supaQuery.or("name.ilike.\(pattern),city.ilike.\(pattern),state.ilike.\(pattern)")
-            }
-            let dbCourses: [DBGolfCourse] = try await supaQuery
-                .order("name")
-                .limit(40)
-                .execute()
-                .value
-            let mapped = dbCourses.map { $0.toCourse() }
-            allLoadedCourses = mapped
-            courses = mapped
-            filteredCourses = mapped
-        } catch {
-            print("CourseViewModel.loadFromSupabase failed: \(error)")
-            allLoadedCourses = []
-            filteredCourses = []
-        }
-    }
+  private func distance(from userLocation: CLLocation, to coordinate: CLLocationCoordinate2D?) -> CLLocationDistance {
+    guard let coordinate else { return .greatestFiniteMagnitude }
+    let target = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+    return userLocation.distance(from: target)
+  }
+  private func setupSearch() {
+    $searchText
+      .debounce(for: .milliseconds(500), scheduler: RunLoop.main)
+      .removeDuplicates()
+      .sink { [weak self] searchText in
+        guard let self = self else { return }
+        Task {
+          await self.performSearch(query: searchText)
+        }
+      }
+      .store(in: &cancellables)
+  }
 
-    private func performSearch(query: String) async {
-        let trimmed = query.trimmingCharacters(in: .whitespaces)
-        if trimmed.isEmpty {
-            filteredUsers = []
-            setFilter(selectedFilter)
-            return
-        }
+  private func performSearch(query: String) async {
+    if query.isEmpty {
+      self.filteredCourses = self.courses
+      self.filteredUsers = []
+      return
+    }
 
-        isLoading = true
-        defer { isLoading = false }
+    isLoading = true
+    defer { isLoading = false }
 
-        // Try Google Places, then fall back to Supabase
-        var courseHits: [Course] = []
-        do {
-            courseHits = try await GooglePlacesService.shared.searchGolfCourses(query: trimmed)
-        } catch {
-            print("CourseViewModel.performSearch Places failed: \(error)")
-        }
-        if courseHits.isEmpty {
-            await loadFromSupabase(query: trimmed)
-            // loadFromSupabase already updated filteredCourses
-        } else {
-            allLoadedCourses = courseHits
-            courses = courseHits
-            // Re-apply current filter
-            setFilter(selectedFilter)
-        }
+    // Run course + profile search concurrently
+    async let fetchedCoursesTask = searchCourses(query: query)
+    async let fetchedProfilesTask = searchProfiles(query: query)
 
-        // User search runs in parallel
-        do {
-            let pattern = "%\(trimmed)%"
-            let profiles: [DBProfile] = try await supabase.from("profiles")
-                .select()
-                .or("username.ilike.\(pattern),full_name.ilike.\(pattern)")
-                .limit(8)
-                .execute()
-                .value
-            filteredUsers = profiles.map { $0.toUser() }
-        } catch {
-            print("CourseViewModel.performSearch users failed: \(error)")
-            filteredUsers = []
-        }
-    }
+    let (fetchedCourses, fetchedProfiles) = await (fetchedCoursesTask, fetchedProfilesTask)
 
-    // MARK: - Location
+    self.filteredCourses = fetchedCourses
+    self.filteredUsers = fetchedProfiles.map { profile in
+      User(
+        id: profile.id,
+        username: profile.username,
+        fullName: profile.fullName ?? profile.username,
+        isVerified: profile.isUniversityVerified ?? false,
+        profileImageName: profile.avatarUrl ?? “profile_placeholder”,
+        university: nil,
+        handicap: profile.handicap ?? 0.0,
+        averageScore: 0.0,
+        bestRound: 0,
+        roundsPlayed: 0,
+        badges: profile.isUniversityVerified == true ? [.verified] : [],
+        bio: profile.bio,
+        friendsCount: 0
+      )
+    }
+  }
 
-    private func requestLocationIfNeeded() {
-        switch locationManager.authorizationStatus {
-        case .notDetermined:
-            locationManager.requestWhenInUseAuthorization()
-        case .authorizedWhenInUse, .authorizedAlways:
-            locationManager.startUpdatingLocation()
-        case .denied, .restricted:
-            locationDenied = true
-        @unknown default: break
-        }
-    }
+  private func searchCourses(query: String) async -> [Course] {
+    // Get current location for distance bias + sorting
+    let coordinate: CLLocationCoordinate2D
+    do {
+      coordinate = try await locationManager.requestLocation()
+    } catch {
+      coordinate = fallbackLocation
+    }
 
-    nonisolated func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        guard let last = locations.last else { return }
-        Task { @MainActor in
-            self.userLocation = last
-            if self.selectedFilter == .nearby {
-                self.applyNearbyFilter()
-            }
-            manager.stopUpdatingLocation()
-        }
-    }
+    let region = CircularCoordinateRegion(center: coordinate, radius: 200_000) // wider radius for search — ~124 mi
+    let request = SearchByTextRequest(
+      textQuery: “\(query) golf course”,
+      placeProperties: [.placeID, .displayName, .formattedAddress, .coordinate],
+      locationBias: region,
+      maxResultCount: 20
+    )
 
-    nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        Task { @MainActor in
-            switch manager.authorizationStatus {
-            case .authorizedWhenInUse, .authorizedAlways:
-                self.locationDenied = false
-                manager.startUpdatingLocation()
-            case .denied, .restricted:
-                self.locationDenied = true
-            default: break
-            }
-        }
-    }
+    switch await PlacesClient.shared.searchByText(with: request) {
+    case .success(let places):
+      let userLocation = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+      let sorted = places.sorted {
+        distance(from: userLocation, to: $0.coordinate) < distance(from: userLocation, to: $1.coordinate)
+      }
+      return sorted.map { Course(from: $0) }
+
+    case .failure(let error):
+      print(“Failed to search courses: \(error)“)
+      // Local fallback on already-loaded courses
+      return self.courses.filter {
+        $0.name.localizedCaseInsensitiveContains(query)
+        || $0.location.localizedCaseInsensitiveContains(query)
+      }
+    }
+  }
+
+  private func searchProfiles(query: String) async -> [DBProfile] {
+    let likeQuery = “%\(query)%”
+    do {
+      return try await supabase.from(“profiles”)
+        .select()
+        .or(“username.ilike.\(likeQuery),full_name.ilike.\(likeQuery)“)
+        .limit(8)
+        .execute()
+        .value
+    } catch {
+      print(“Failed to search profiles: \(error)“)
+      return []
+    }
+  }
 }
-
-// MARK: - DB → local model helpers (file-private to avoid name conflicts)
-
-fileprivate extension DBGolfCourse {
-    func toCourse() -> Course {
-        let loc = [city, state].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: ", ")
-        return Course(
-            id: id,
-            name: name,
-            location: loc.isEmpty ? address : loc,
-            holes: holes ?? 18,
-            par: par ?? 72,
-            difficulty: courseRating ?? 0,
-            hasDrivingRange: false,
-            hasPuttingGreen: false,
-            latitude: latitude,
-            longitude: longitude,
-            googlePlaceId: googlePlaceId,
-            city: city,
-            state: state
-        )
-    }
-}
-
-fileprivate extension DBProfile {
-    func toUser() -> User {
-        User(
-            id: id,
-            username: username,
-            fullName: fullName ?? username,
-            isVerified: isUniversityVerified ?? false,
-            profileImageName: avatarUrl ?? "",
-            university: nil,
-            handicap: handicap ?? 0.0,
-            averageScore: 0.0,
-            bestRound: 0,
-            roundsPlayed: 0,
-            badges: isUniversityVerified == true ? [.verified] : [],
-            bio: bio,
-            friendsCount: 0
-        )
-    }
+extension Course {
+  init(from place: Place) {
+    self.id = UUID()
+    self.name = place.displayName ?? place.formattedAddress ?? "Unknown Course"
+    self.location = place.formattedAddress ?? "Unknown Location"
+    self.holes = 18
+    self.par = 72
+    self.difficulty = 0.0
+    self.hasDrivingRange = false
+    self.hasPuttingGreen = false
+    self.latitude = place.coordinate?.latitude
+    self.longitude = place.coordinate?.longitude
+    self.googlePlaceId = place.placeID
+    self.city = nil
+    self.state = nil
+  }
 }
