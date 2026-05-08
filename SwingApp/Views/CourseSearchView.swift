@@ -1,103 +1,116 @@
 import SwiftUI
 
 struct CourseSearchView: View {
-  @StateObject private var viewModel = CourseViewModel()
-  @State private var selectedFilter: CourseFilter = .all
-  enum CourseFilter: String, CaseIterable {
-    case all = “All”
-    case nearby = “Nearby”
-    case topRated = “Top Rated”
-    case practiced = “Practiced”
-  }
+  @StateObject private var viewModel = CourseViewModel()
+  @State private var selectedFilter: CourseFilter = .all
+  @State private var showMap: Bool = false
+  @State private var selectedCourse: Course?
+  enum CourseFilter: String, CaseIterable {
+    case all = "All"
+    case nearby = "Nearby"
+    case topRated = "Top Rated"
+    case practiced = "Practiced"
+  }
 
-  var body: some View {
-    NavigationStack {
-      ScrollView(showsIndicators: false) {
-        VStack(spacing: 0) {
-          // Search Bar
-          HStack(spacing: 10) {
-            Image(systemName: “magnifyingglass”)
-              .font(.system(size: 16, weight: .medium))
-              .foregroundColor(GolfrColors.textSecondary)
+  var body: some View {
+    NavigationStack {
+      ScrollView(showsIndicators: false) {
+        VStack(spacing: 0) {
+          // Search Bar
+          HStack(spacing: 10) {
+            Image(systemName: "magnifyingglass")
+              .font(.system(size: 16, weight: .medium))
+              .foregroundColor(GolfrColors.textSecondary)
 
-            TextField(“Search courses, cities & friends”, text: $viewModel.searchText)
-              .font(GolfrFonts.body())
+            TextField("Search courses, cities & friends", text: $viewModel.searchText)
+              .font(GolfrFonts.body())
 
-            if !viewModel.searchText.isEmpty {
-              Button(action: { viewModel.searchText = “” }) {
-                Image(systemName: “xmark.circle.fill”)
-                  .font(.system(size: 16))
-                  .foregroundColor(GolfrColors.textSecondary)
-              }
-            }
-          }
-          .padding(14)
-          .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-              .fill(GolfrColors.backgroundCard)
-          )
-          .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-              .stroke(GolfrColors.textSecondary.opacity(0.1), lineWidth: 1)
-          )
-          .padding(.horizontal)
+            if !viewModel.searchText.isEmpty {
+              Button(action: { viewModel.searchText = "" }) {
+                Image(systemName: "xmark.circle.fill")
+                  .font(.system(size: 16))
+                  .foregroundColor(GolfrColors.textSecondary)
+              }
+            }
+          }
+          .padding(14)
+          .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+              .fill(GolfrColors.backgroundCard)
+          )
+          .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+              .stroke(GolfrColors.textSecondary.opacity(0.1), lineWidth: 1)
+          )
+          .padding(.horizontal)
 
-          // Filter pills
-          ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-              ForEach(CourseFilter.allCases, id: \.self) { filter in
-                Button(action: {
-                  withAnimation(.easeInOut(duration: 0.2)) {
-                    selectedFilter = filter
-                  }
-                }) {
-                  Text(filter.rawValue)
-                    .golfrPillButton(isActive: selectedFilter == filter)
-                }
-              }
-            }
-            .padding(.horizontal)
-          }
-          .padding(.vertical, 12)
+          // Filter pills
+          ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+              ForEach(CourseFilter.allCases, id: \.self) { filter in
+                Button(action: {
+                  withAnimation(.easeInOut(duration: 0.2)) {
+                    selectedFilter = filter
+                  }
+                }) {
+                  Text(filter.rawValue)
+                    .golfrPillButton(isActive: selectedFilter == filter)
+                }
+              }
+            }
+            .padding(.horizontal)
+          }
+          .padding(.vertical, 12)
 
-          // Featured course header card
-          if !viewModel.filteredCourses.isEmpty {
-            FeaturedCourseCard(course: viewModel.filteredCourses[0])
-              .padding(.horizontal)
-              .padding(.bottom, 12)
-          }
+          if showMap {
+            GoogleMapView(courses: viewModel.filteredCourses, selectedCourse: $selectedCourse)
+              .frame(height: UIScreen.main.bounds.height * 0.6)
+              .padding(.horizontal)
+              .padding(.bottom, 100)
+          } else {
+            // Featured course header card
+            if !viewModel.filteredCourses.isEmpty {
+              FeaturedCourseCard(course: viewModel.filteredCourses[0])
+                .padding(.horizontal)
+                .padding(.bottom, 12)
+            }
 
-          // Course List
-          LazyVStack(spacing: 12) {
-            ForEach(viewModel.filteredCourses.dropFirst()) { course in
-              CourseListCard(course: course)
-                .padding(.horizontal)
-            }
-          }
-          .padding(.bottom, 100)
-        }
-      }
-      .background(GolfrColors.backgroundPrimary.ignoresSafeArea())
-      .navigationBarTitleDisplayMode(.inline)
-      .toolbar {
-        ToolbarItem(placement: .principal) {
-          Text(“discover”)
-            .font(GolfrFonts.pageTitle())
-            .foregroundColor(GolfrColors.primary)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 6)
-            .background(Capsule().fill(GolfrColors.backgroundCard))
-            .fixedSize()
-        }
-        ToolbarItem(placement: .navigationBarTrailing) {
-          HStack(spacing: 8) {
-            GolfrNavButton(icon: “map”) {}
-            GolfrNavButton(icon: “slider.horizontal.3”) {}
-          }
-        }
-      }
-    }
-  }
+            // Course List
+            LazyVStack(spacing: 12) {
+              ForEach(viewModel.filteredCourses.dropFirst()) { course in
+                CourseListCard(course: course)
+                  .padding(.horizontal)
+              }
+            }
+            .padding(.bottom, 100)
+          }
+        }
+      }
+      .background(GolfrColors.backgroundPrimary.ignoresSafeArea())
+      .navigationBarTitleDisplayMode(.inline)
+      .toolbar {
+        ToolbarItem(placement: .principal) {
+          Text("discover")
+            .font(GolfrFonts.pageTitle())
+            .foregroundColor(GolfrColors.primary)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 6)
+            .background(Capsule().fill(GolfrColors.backgroundCard))
+            .fixedSize()
+        }
+        ToolbarItem(placement: .navigationBarTrailing) {
+          HStack(spacing: 8) {
+            GolfrNavButton(icon: showMap ? "list.bullet" : "map") {
+                withAnimation {
+                    showMap.toggle()
+                }
+            }
+            GolfrNavButton(icon: "slider.horizontal.3") {}
+          }
+        }
+      }
+    }
+  }
 }
 
 // MARK: - Featured Course Card (Phantom-style hero)

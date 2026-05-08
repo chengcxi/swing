@@ -32,11 +32,11 @@ class GooglePlacesService {
                     // difficulty: Double.random(in: 3.0...10.0), // Mock data as Place text search doesn't return this
                     // hasDrivingRange: Bool.random(),
                     // hasPuttingGreen: Bool.random(),
-                    // latitude: place.coordinate?.latitude,
-                    // longitude: place.coordinate?.longitude,
-                    // googlePlaceId: place.placeID,
-                    // city: city,
-                    // state: state
+                    latitude: place.coordinate?.latitude,
+                    longitude: place.coordinate?.longitude,
+                    googlePlaceId: place.placeID,
+                    city: city,
+                    state: state
                 )
             }
         case .failure(let error):

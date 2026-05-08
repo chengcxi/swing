@@ -11,15 +11,15 @@ struct Course: Identifiable {
     // var hasPuttingGreen: Bool
 
     /// Latitude / longitude when known (Google Places result or Supabase row).
-    // var latitude: Double?
-    // var longitude: Double?
+    var latitude: Double?
+    var longitude: Double?
 
-    // /// Google Places stable identifier — used to dedupe when persisting to Supabase.
-    // var googlePlaceId: String?
+    /// Google Places stable identifier — used to dedupe when persisting to Supabase.
+    var googlePlaceId: String?
 
-    // /// City extracted from the formatted address when possible.
-    // var city: String?
-    // var state: String?
+    /// City extracted from the formatted address when possible.
+    var city: String?
+    var state: String?
 
     // var holePars: [Int] {
     //     let standard18 = [4, 4, 3, 5, 4, 3, 4, 5, 4, 4, 3, 5, 4, 4, 3, 4, 5, 4]

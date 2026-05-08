@@ -182,8 +182,8 @@ extension Course {
     // self.difficulty = 0.0
     // self.hasDrivingRange = false
     // self.hasPuttingGreen = false
-    // self.latitude = place.coordinate?.latitude
-    // self.longitude = place.coordinate?.longitude
+    self.latitude = place.coordinate?.latitude
+    self.longitude = place.coordinate?.longitude
     self.googlePlaceId = place.placeID
   }
 }

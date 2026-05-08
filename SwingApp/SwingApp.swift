@@ -1,5 +1,6 @@
 import SwiftUI
 import GooglePlacesSwift
+import GoogleMaps
 
 @main
 struct SwingApp: App {
@@ -7,6 +8,7 @@ struct SwingApp: App {
     
     init() {
         PlacesClient.shared.provideAPIKey(Secrets.googleMapsAPIKey)
+        GMSServices.provideAPIKey(Secrets.googleMapsAPIKey)
     }
     
     var body: some Scene {
