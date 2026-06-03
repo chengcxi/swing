@@ -116,106 +116,106 @@ struct CourseSearchView: View {
 // MARK: - Featured Course Card (Phantom-style hero)
 
 struct FeaturedCourseCard: View {
-  let course: Course
+  let course: Course
 
-  var body: some View {
-    VStack(alignment: .leading, spacing: 14) {
-      ZStack(alignment: .bottomLeading) {
-        RoundedRectangle(cornerRadius: 16, style: .continuous)
-          .fill(GolfrColors.cardGradient)
-          .frame(height: 140)
+  var body: some View {
+    VStack(alignment: .leading, spacing: 14) {
+      ZStack(alignment: .bottomLeading) {
+        RoundedRectangle(cornerRadius: 16, style: .continuous)
+          .fill(GolfrColors.cardGradient)
+          .frame(height: 140)
 
-        // Decorative circles
-        GeometryReader { geo in
-          Circle()
-            .fill(Color.white.opacity(0.05))
-            .frame(width: 100, height: 100)
-            .offset(x: geo.size.width - 60, y: -20)
+        // Decorative circles
+        GeometryReader { geo in
+          Circle()
+            .fill(Color.white.opacity(0.05))
+            .frame(width: 100, height: 100)
+            .offset(x: geo.size.width - 60, y: -20)
 
-          Circle()
-            .fill(Color.white.opacity(0.03))
-            .frame(width: 60, height: 60)
-            .offset(x: geo.size.width - 120, y: 80)
-        }
+          Circle()
+            .fill(Color.white.opacity(0.03))
+            .frame(width: 60, height: 60)
+            .offset(x: geo.size.width - 120, y: 80)
+        }
 
-        VStack(alignment: .leading, spacing: 4) {
-          HStack {
-            Text(“Featured”)
-              .font(GolfrFonts.caption())
-              .foregroundColor(GolfrColors.gold)
-              .padding(.horizontal, 8)
-              .padding(.vertical, 4)
-              .background(
-                Capsule().fill(GolfrColors.gold.opacity(0.2))
-              )
-            Spacer()
-          }
+        VStack(alignment: .leading, spacing: 4) {
+          HStack {
+            Text("Featured")
+              .font(GolfrFonts.caption())
+              .foregroundColor(GolfrColors.gold)
+              .padding(.horizontal, 8)
+              .padding(.vertical, 4)
+              .background(
+                Capsule().fill(GolfrColors.gold.opacity(0.2))
+              )
+            Spacer()
+          }
 
-          Spacer()
+          Spacer()
 
-          Text(course.name)
-            .font(GolfrFonts.title())
-            .foregroundColor(.white)
+          Text(course.name)
+            .font(GolfrFonts.title())
+            .foregroundColor(.white)
 
-          HStack(spacing: 12) {
-            HStack(spacing: 5) {
-              Image(systemName: “mappin”)
-                .font(.system(size: 10))
-              Text(course.location)
-                .font(GolfrFonts.caption())
-            }
-            .foregroundColor(GolfrColors.textOnDarkMuted)
+          HStack(spacing: 12) {
+            HStack(spacing: 5) {
+              Image(systemName: "mappin")
+                .font(.system(size: 10))
+              Text(course.location)
+                .font(GolfrFonts.caption())
+            }
+            .foregroundColor(GolfrColors.textOnDarkMuted)
 
-            .foregroundColor(GolfrColors.textOnDarkMuted)
+            .foregroundColor(GolfrColors.textOnDarkMuted)
 
-            .foregroundColor(GolfrColors.gold)
-          }
-        }
-        .padding(16)
-      }
-      .frame(height: 140)
-      .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-    }
-    .shadow(color: GolfrColors.primary.opacity(0.2), radius: 12, x: 0, y: 6)
-  }
+            .foregroundColor(GolfrColors.gold)
+          }
+        }
+        .padding(16)
+      }
+      .frame(height: 140)
+      .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+    .shadow(color: GolfrColors.primary.opacity(0.2), radius: 12, x: 0, y: 6)
+  }
 }
 
 // MARK: - Course List Card
 
 struct CourseListCard: View {
-  let course: Course
+  let course: Course
 
-  var body: some View {
-    HStack(spacing: 14) {
-      // Thumbnail placeholder
-      ZStack {
-        RoundedRectangle(cornerRadius: 12, style: .continuous)
-          .fill(GolfrColors.primaryMedium.opacity(0.1))
-          .frame(width: 72, height: 72)
+  var body: some View {
+    HStack(spacing: 14) {
+      // Thumbnail placeholder
+      ZStack {
+        RoundedRectangle(cornerRadius: 12, style: .continuous)
+          .fill(GolfrColors.primaryMedium.opacity(0.1))
+          .frame(width: 72, height: 72)
 
-        Image(systemName: “figure.golf”)
-          .font(.system(size: 24))
-          .foregroundColor(GolfrColors.primaryMedium.opacity(0.5))
-      }
+        Image(systemName: "figure.golf")
+          .font(.system(size: 24))
+          .foregroundColor(GolfrColors.primaryMedium.opacity(0.5))
+      }
 
-      VStack(alignment: .leading, spacing: 6) {
-        Text(course.name)
-          .font(GolfrFonts.headline())
-          .foregroundColor(GolfrColors.textPrimary)
+      VStack(alignment: .leading, spacing: 6) {
+        Text(course.name)
+          .font(GolfrFonts.headline())
+          .foregroundColor(GolfrColors.textPrimary)
 
-        HStack(spacing: 5) {
-          Image(systemName: “mappin.and.ellipse”)
-            .font(.system(size: 10))
-          Text(course.location)
-            .font(GolfrFonts.caption())
-        }
-        .foregroundColor(GolfrColors.textSecondary)
-      }
+        HStack(spacing: 5) {
+          Image(systemName: "mappin.and.ellipse")
+            .font(.system(size: 10))
+          Text(course.location)
+            .font(GolfrFonts.caption())
+        }
+        .foregroundColor(GolfrColors.textSecondary)
+      }
 
-      Spacer()
+      Spacer()
 
-    }
-    .padding(12)
-    .golfrCard(cornerRadius: 16)
-  }
-}\
+    }
+    .padding(12)
+    .golfrCard(cornerRadius: 16)
+  }
+}

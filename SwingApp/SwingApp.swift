@@ -7,7 +7,7 @@ struct SwingApp: App {
     @StateObject private var appViewModel = AppViewModel()
     
     init() {
-        PlacesClient.shared.provideAPIKey(Secrets.googleMapsAPIKey)
+        PlacesClient.provideAPIKey(Secrets.googleMapsAPIKey)
         GMSServices.provideAPIKey(Secrets.googleMapsAPIKey)
     }
     

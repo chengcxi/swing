@@ -27,7 +27,6 @@ class CourseViewModel: ObservableObject {
     isLoading = true
     defer { isLoading = false }
 
-    // 1. Get user's location (falls back to UCSB)
     let coordinate: CLLocationCoordinate2D
     do {
       coordinate = try await locationManager.requestLocation()
@@ -36,7 +35,6 @@ class CourseViewModel: ObservableObject {
       coordinate = fallbackLocation
     }
 
-    // 2. Build request
     let region = CircularCoordinateRegion(center: coordinate, radius: 50_000)
     let request = SearchByTextRequest(
       textQuery: "golf course",
@@ -45,30 +43,30 @@ class CourseViewModel: ObservableObject {
       maxResultCount: 20
     )
 
-    // 3. Fetch + sort by distance from user
     switch await PlacesClient.shared.searchByText(with: request) {
     case .success(let places):
       let userLocation = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-
-      let sortedPlaces = places.sorted { lhs, rhs in
-        let lhsDistance = distance(from: userLocation, to: lhs.coordinate)
-        let rhsDistance = distance(from: userLocation, to: rhs.coordinate)
-        return lhsDistance < rhsDistance
-      }
-
+      let sortedPlaces = sortByDistance(places, from: userLocation)
       let fetched = sortedPlaces.map { Course(from: $0) }
       self.courses = fetched
       self.filteredCourses = fetched
 
     case .failure(let error):
       print("Failed to fetch initial courses: \(error)")
-      self.courses = Course.mocks
-      self.filteredCourses = Course.mocks
+      self.courses = []
+      self.filteredCourses = []
     }
   }
 
-  private func distance(from userLocation: CLLocation, to coordinate: CLLocationCoordinate2D?) -> CLLocationDistance {
-    guard let coordinate else { return .greatestFiniteMagnitude }
+  private func sortByDistance(_ places: [Place], from userLocation: CLLocation) -> [Place] {
+    places.sorted { (lhs: Place, rhs: Place) -> Bool in
+      let lhsDist = distance(from: userLocation, to: lhs.location)
+      let rhsDist = distance(from: userLocation, to: rhs.location)
+      return lhsDist < rhsDist
+    }
+  }
+
+  private func distance(from userLocation: CLLocation, to coordinate: CLLocationCoordinate2D) -> CLLocationDistance {
     let target = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
     return userLocation.distance(from: target)
   }
@@ -96,7 +94,6 @@ class CourseViewModel: ObservableObject {
     isLoading = true
     defer { isLoading = false }
 
-    // Run course + profile search concurrently
     async let fetchedCoursesTask = searchCourses(query: query)
     async let fetchedProfilesTask = searchProfiles(query: query)
 
@@ -141,9 +138,7 @@ class CourseViewModel: ObservableObject {
     switch await PlacesClient.shared.searchByText(with: request) {
     case .success(let places):
       let userLocation = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-      let sorted = places.sorted {
-        distance(from: userLocation, to: $0.coordinate) < distance(from: userLocation, to: $1.coordinate)
-      }
+      let sorted = sortByDistance(places, from: userLocation)
       return sorted.map { Course(from: $0) }
 
     case .failure(let error):
@@ -174,16 +169,10 @@ class CourseViewModel: ObservableObject {
 extension Course {
   init(from place: Place) {
     self.id = UUID()
-    // Using place.displayName if available, otherwise formattedAddress
     self.name = place.displayName ?? place.formattedAddress ?? "Unknown Course"
     self.location = place.formattedAddress ?? "Unknown Location"
-    // self.holes = 18
-    // self.par = 72
-    // self.difficulty = 0.0
-    // self.hasDrivingRange = false
-    // self.hasPuttingGreen = false
-    self.latitude = place.coordinate?.latitude
-    self.longitude = place.coordinate?.longitude
+    self.latitude = place.location.latitude
+    self.longitude = place.location.longitude
     self.googlePlaceId = place.placeID
   }
 }
