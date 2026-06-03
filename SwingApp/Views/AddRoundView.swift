@@ -316,7 +316,7 @@ struct CourseSelectionStep: View {
             courses = try await GooglePlacesService.shared.searchGolfCourses(query: query)
         } catch {
             print("CourseSelectionStep search failed: \(error)")
-            courses = Course.mocks
+            courses = []
         }
     }
 }

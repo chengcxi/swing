@@ -191,7 +191,8 @@ class AppViewModel: ObservableObject {
                 friendsCount: followers.count
             )
         } catch {
-            print("Failed to load profile: \(error)")
+            print("🚨 loadProfile failed for userId \(userId): \(error)")
+            print("🚨 Full error: \(String(reflecting: error))")
         }
     }
 
@@ -332,8 +333,8 @@ class AppViewModel: ObservableObject {
             country: "USA",
             latitude: course.latitude ?? 0,
             longitude: course.longitude ?? 0,
-            holes: course.holes,
-            par: course.par,
+            holes: 18,
+            par: 72,
             google_place_id: course.googlePlaceId
         )
 
@@ -360,7 +361,7 @@ class AppViewModel: ObservableObject {
                 location: course?.location ?? "",
                 score: score,
                 date: date,
-                holes: course?.holes ?? 18
+                holes: 18
             )
             devRounds.insert(round, at: 0)
             // Keep stats fresh on the mock user too
@@ -374,7 +375,23 @@ class AppViewModel: ObservableObject {
             return true
         }
 
-        guard let userId = currentUser?.id else { return false }
+        guard let userId = currentUser?.id else {
+            print("⚠️ saveRound: no currentUser.id")
+            return false
+        }
+
+        // Debug: confirm what Supabase thinks our session is right now
+        do {
+            let session = try await supabase.auth.session
+            print("🔐 saveRound session — auth.uid: \(session.user.id), email: \(session.user.email ?? "nil"), confirmed_at: \(String(describing: session.user.emailConfirmedAt))")
+            print("🆔 currentUser.id (used for insert): \(userId)")
+            if session.user.id != userId {
+                print("🚨 MISMATCH: session.user.id != currentUser.id — that's the bug")
+            }
+        } catch {
+            print("🚨 saveRound: NO ACTIVE SESSION — \(error). RLS will reject any insert.")
+            return false
+        }
 
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
@@ -414,7 +431,8 @@ class AppViewModel: ObservableObject {
             await loadProfile(userId: userId)
             return true
         } catch {
-            print("Failed to save round: \(error)")
+            print("🚨 saveRound failed: \(error)")
+            print("🚨 Full error: \(String(reflecting: error))")
             return false
         }
     }
